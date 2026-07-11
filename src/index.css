@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@theme {
+  --font-sans: "Inter", "Noto Sans KR", sans-serif;
+  --font-serif: "Noto Serif KR", Georgia, serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --color-gold-50: #fcf9f2;
+  --color-gold-100: #faf1df;
+  --color-gold-200: #f3dfbe;
+  --color-gold-300: #eac594;
+  --color-gold-400: #dfa76b;
+  --color-gold-500: #c6854b;
+  --color-gold-600: #b16d3a;
+  --color-gold-700: #93532f;
+  --color-gold-800: #764228;
+  --color-gold-900: #5f3622;
+  --color-gold-950: #341b11;
+  
+  --color-brand-beige: #fbf9f4;
+  --color-brand-charcoal: #121212;
+  --color-brand-bronze: #af8151; /* Beautiful amber/gold-brown matching the screenshot */
+  --color-brand-bronze-dark: #8c6339;
+  --color-brand-cream: #faf5ed;
+}
+
+/* Custom styles for high-end scrollbars and text selection */
+::selection {
+  background-color: var(--color-brand-bronze);
+  color: white;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #121212;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-bronze);
+}
+

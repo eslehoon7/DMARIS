@@ -1,0 +1,6 @@
+{
+  "name": "Dmaris Premium Buffet",
+  "description": "Premium buffet website for Dmaris featuring an elegant PC/mobile layout, booking system, menu catalog, and administrative control panel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
