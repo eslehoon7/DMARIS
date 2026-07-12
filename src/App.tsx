@@ -55,7 +55,7 @@ const services = [
     korTitle: '첫돌 파티',
     desc: '사랑스러운 첫 순간,\n정성과 품격으로 함께합니다',
     detail: '현대식·전통식 테마 돌상 커스텀, 유기농 재료 식단, 돌잡이 전담 연출 스태프 및 단독 룸 배정을 통해 온 가족이 편안하고 행복하게 머물 수 있는 축제의 장을 준비합니다.',
-    imageUrl: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&auto=format&fit=crop&q=80',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B2%AB%EB%8F%8C%EC%82%AC%EC%A7%84.jpg?alt=media&token=5856c9df-7c1d-4fd0-8cb1-ba6ff6c199d9',
     icon: Gift
   },
   {
@@ -64,16 +64,16 @@ const services = [
     korTitle: '칠순 · 팔순',
     desc: '존경과 감사의 마음을 담아,\n뜻깊은 시간을 완성합니다',
     detail: '생신을 축하하는 전통 헌수 상차림과 어르신들의 입맛에 꼭 맞춘 영양 신선로, 갈비찜 등의 궁중 요리, 고품격 현수막 및 감사 영상 스크린 지원으로 기품 있는 효도를 선사합니다.',
-    imageUrl: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=80',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B9%A0%EC%88%9C%2C%ED%8C%94%EC%88%9C%EC%82%AC%EC%A7%84.jpg?alt=media&token=72118016-7ac4-42d4-93a5-189b97272ea1',
     icon: Sparkles
   },
   {
     num: '04',
     title: 'CORPORATE EVENTS',
-    korTitle: '기업 행사',
+    korTitle: '출장 뷔페',
     desc: '비즈니스의 가치를 높이는\n품격 있는 연회와 서비스',
     detail: '송년회, 신년회, 비즈니스 미팅, 제품 런칭 쇼케이스 등을 위해 대형 빔 프로젝터, 프로 음향 오디오 시스템 및 레이아웃 커스텀 테이블을 완비한 스페셜 홀을 대여해 드립니다.',
-    imageUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B6%9C%EC%9E%A5%EB%B7%94%ED%8E%9801.jpg?alt=media&token=a6cf8cb4-cd32-4ac3-9c96-db71ba0a925f',
     icon: Briefcase
   },
   {
@@ -82,7 +82,7 @@ const services = [
     korTitle: '케이터링',
     desc: '어디서든 품격 있는 음식으로\n특별함을 전합니다',
     detail: '가정, 야외 가든, 기업 사무실 등 원하시는 특별한 장소로 셰프들이 직접 출동하여 라이브 푸드 스테이션을 설치하고 데코레이션부터 케이터링 서비스까지 완벽하게 제공합니다.',
-    imageUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%BC%80%EC%9D%B4%ED%84%B0%EB%A7%8101.jpg?alt=media&token=556b5e80-21d0-4d3c-be45-144bc34db66d',
     icon: Coffee
   }
 ];
@@ -642,9 +642,9 @@ export default function App() {
         {/* Extreme High-Quality Luxury Food Plating Background */}
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images.unsplash.com/photo-1544025162-d76694265947?w=1600&auto=format&fit=crop&q=80"
+            src="https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2FKakaoTalk_20260706_124040941_02.jpg?alt=media&token=b893693e-571e-400a-b146-0922d08c7a27"
             alt="Dmaris Premium Buffet Dining spread"
-            className="w-full h-full object-cover opacity-60 scale-105 animate-subtle-zoom"
+            className="w-full h-full object-cover object-[center_35%] opacity-60 scale-105 animate-subtle-zoom"
             referrerPolicy="no-referrer"
           />
           {/* Elegant radial/bottom vignetting */}
@@ -835,7 +835,11 @@ export default function App() {
                       <img
                         src={svc.imageUrl}
                         alt={svc.korTitle}
-                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+                        className={`w-full h-full object-cover transition-transform duration-500 ${
+                          svc.title === 'CATERING'
+                            ? 'scale-[1.3] group-hover:scale-[1.35] brightness-[1.06] contrast-[1.06] saturate-[1.12]'
+                            : 'group-hover:scale-102'
+                        }`}
                         referrerPolicy="no-referrer"
                       />
                     </div>
