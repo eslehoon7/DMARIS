@@ -8,7 +8,7 @@ service cloud.firestore {
     }
 
     function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
     }
 
     function isValidReservation(data) {
@@ -63,28 +63,28 @@ service cloud.firestore {
       allow read: if true;
       allow create: if isValidId(reservationId) && isValidReservation(request.resource.data);
       allow update: if isValidId(reservationId) && isValidReservation(request.resource.data);
-      allow delete: if isValidId(reservationId);
+      allow delete: if true;
     }
 
     match /menu_items/{menuItemId} {
       allow read: if true;
       allow create: if isValidId(menuItemId) && isValidMenuItem(request.resource.data);
       allow update: if isValidId(menuItemId) && isValidMenuItem(request.resource.data);
-      allow delete: if isValidId(menuItemId);
+      allow delete: if true;
     }
 
     match /gallery_items/{galleryItemId} {
       allow read: if true;
       allow create: if isValidId(galleryItemId) && isValidGalleryItem(request.resource.data);
       allow update: if isValidId(galleryItemId) && isValidGalleryItem(request.resource.data);
-      allow delete: if isValidId(galleryItemId);
+      allow delete: if true;
     }
 
     match /reviews/{reviewId} {
       allow read: if true;
       allow create: if isValidId(reviewId) && isValidReview(request.resource.data);
       allow update: if isValidId(reviewId) && isValidReview(request.resource.data);
-      allow delete: if isValidId(reviewId);
+      allow delete: if true;
     }
   }
 }

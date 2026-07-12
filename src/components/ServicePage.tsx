@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Heart, Gift, Sparkles, Briefcase, Coffee, Check, ArrowRight, Upload, Trash2, Eye, Image as ImageIcon, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { GalleryItem } from '../types';
 
 interface ServicePageProps {
   activeTab: number;
@@ -11,6 +12,7 @@ interface ServicePageProps {
   onAboutClick: () => void;
   onAdminClick: () => void;
   scrollToSection: (id: string) => void;
+  galleryItems?: GalleryItem[];
 }
 
 const serviceDetails = [
@@ -88,6 +90,21 @@ const serviceDetails = [
     imageUrl: "https://images.unsplash.com/photo-1555244162-803834f70033?w=1200&auto=format&fit=crop&q=80",
     icon: Coffee,
     colorAccent: "#6B543F"
+  },
+  {
+    title: "BUFFET",
+    korTitle: "스페셜 뷔페",
+    tagline: "드마리스 프리미엄 정통 뷔페전경과 프리미엄 푸드 라인업",
+    desc: "드마리스의 독보적인 자부심, 넓고 화려한 스페셜 뷔페전경과 250여 가지 세계 일류 명품 요리가 펼쳐진 고품격 다이닝 존입니다. 셰프가 즉석에서 썰어내는 스시, 최상급 스테이크 그릴 코너 등 차원이 다른 뷔페 클래스를 선보입니다.",
+    features: [
+      { name: "초대형 럭셔리 푸드 존", detail: "한식, 중식, 일식, 양식, 디저트까지 완벽히 분할 설계된 압도적 스케일의 푸드 스테이션" },
+      { name: "스페셜 라이브 그릴 & 스시", detail: "신선한 참치 라이브 해체 쇼 및 최고급 등심 그릴 바비큐 즉석 조리 시스템" },
+      { name: "초현대식 고품격 인테리어", detail: "고급스러운 샹들리에와 최고급 대리석 인레이 공법으로 설계된 완벽하고 웅장한 연회 분위기" },
+      { name: "프라이빗 룸 연계 다이닝", detail: "소규모 단독 파티부터 대규모 기업 연회까지 인원수에 부합하는 다양한 프라이빗 다이닝 룸 완비" }
+    ],
+    imageUrl: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&auto=format&fit=crop&q=80",
+    icon: ImageIcon,
+    colorAccent: "#8C745C"
   }
 ];
 
@@ -116,6 +133,11 @@ const defaultCaseImages: Record<number, string[]> = {
     "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80",
     "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=80",
     "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80"
+  ],
+  5: [
+    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80"
   ]
 };
 
@@ -126,7 +148,8 @@ const categoryFallbacks: Record<number, string> = {
   1: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&auto=format&fit=crop&q=80",
   2: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=80",
   3: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80",
-  4: "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80"
+  4: "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80",
+  5: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80"
 };
 
 const subCategoriesConfig: Record<number, string[]> = {
@@ -134,7 +157,8 @@ const subCategoriesConfig: Record<number, string[]> = {
   1: ["전체", "전통돌상", "현대돌상", "패키지연출"],
   2: ["전체", "전통생신상", "현대생신상", "직계가족예식"],
   3: ["전체", "세미나·포럼", "사은회·시상식", "연말파티"],
-  4: ["전체", "핑거푸드", "럭셔리뷔페", "홈파티박스"]
+  4: ["전체", "핑거푸드", "럭셔리뷔페", "홈파티박스"],
+  5: ["전체", "스페셜 뷔페", "뷔페전경", "푸드코너"]
 };
 
 const subCategoryImages: Record<number, Record<string, string[]>> = {
@@ -227,7 +251,30 @@ const subCategoryImages: Record<number, Record<string, string[]>> = {
       "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=800&auto=format&fit=crop&q=80",
       "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80"
     ]
+  },
+  5: { // BUFFET
+    "스페셜 뷔페": [
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=80"
+    ],
+    "뷔페전경": [
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80"
+    ],
+    "푸드코너": [
+      "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80"
+    ]
   }
+};
+
+const tabToCategoryMap: Record<number, string> = {
+  0: 'WEDDING',
+  1: 'BIRTHDAY',
+  2: 'LONGEVITY',
+  3: 'CORPORATE',
+  4: 'CATERING',
+  5: 'BUFFET'
 };
 
 export default function ServicePage({
@@ -238,11 +285,12 @@ export default function ServicePage({
   onInquire,
   onAboutClick,
   onAdminClick,
-  scrollToSection
+  scrollToSection,
+  galleryItems = []
 }: ServicePageProps) {
   
   const currentService = serviceDetails[activeTab];
-  const IconComponent = currentService.icon;
+  const IconComponent = currentService?.icon || ImageIcon;
 
   const [activeSubCategory, setActiveSubCategory] = useState<string>("전체");
 
@@ -260,8 +308,9 @@ export default function ServicePage({
 
   // Dynamic image fetching for category + subcategory
   const images = React.useMemo(() => {
-    const catData = subCategoryImages[activeTab];
-    if (!catData) return [];
+    // 1. Get static preset images
+    const catData = subCategoryImages[activeTab] || {};
+    let presetImages: string[] = [];
     if (activeSubCategory === "전체") {
       const allImgs: string[] = [];
       Object.values(catData).forEach(list => {
@@ -269,10 +318,32 @@ export default function ServicePage({
           if (!allImgs.includes(img)) allImgs.push(img);
         });
       });
-      return allImgs;
+      presetImages = allImgs;
+    } else {
+      presetImages = catData[activeSubCategory] || [];
     }
-    return catData[activeSubCategory] || [];
-  }, [activeTab, activeSubCategory]);
+
+    // 2. Get user-uploaded images for this category
+    const catCode = tabToCategoryMap[activeTab];
+    const userUploaded = (galleryItems || [])
+      .filter(item => item.category === catCode)
+      .filter(item => {
+        if (activeSubCategory === "전체") return true;
+        const titleLower = item.title.toLowerCase();
+        const subLower = activeSubCategory.toLowerCase();
+        if (titleLower.includes(subLower)) return true;
+        
+        // Match words
+        const words = subLower.split(/[\s·]/);
+        if (words.some(word => word && titleLower.includes(word))) return true;
+        
+        return false;
+      })
+      .map(item => item.imageUrl);
+
+    // Combine: user uploaded first, then presets
+    return [...userUploaded, ...presetImages];
+  }, [activeTab, activeSubCategory, galleryItems]);
 
   return (
     <div className="w-full bg-[#FAF8F5] text-[#2C2520] flex flex-col font-sans">

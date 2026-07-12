@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { Reservation, MenuItem, GalleryItem, Review } from '../types';
 import { Lock, User, FileText, Plus, LogOut, Check, X, Trash2, Camera, Tag, List, DollarSign, Image as ImageIcon, Sparkles, Star } from 'lucide-react';
 import { motion } from 'motion/react';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { ref, uploadString, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../lib/firebase';
 
 interface AdminPanelProps {
@@ -19,6 +19,10 @@ interface AdminPanelProps {
   onUpdateMenuItems: (menuList: MenuItem[]) => void;
   onUpdateGalleryItems: (galleryList: GalleryItem[]) => void;
   onUpdateReviews: (reviewList: Review[]) => void;
+  onDeleteReservation?: (id: string) => void;
+  onDeleteMenuItem?: (id: string) => void;
+  onDeleteGalleryItem?: (id: string) => void;
+  onDeleteReview?: (id: string) => void;
   onClose: () => void;
 }
 
@@ -31,6 +35,10 @@ export default function AdminPanel({
   onUpdateMenuItems,
   onUpdateGalleryItems,
   onUpdateReviews,
+  onDeleteReservation,
+  onDeleteMenuItem,
+  onDeleteGalleryItem,
+  onDeleteReview,
   onClose
 }: AdminPanelProps) {
   const [adminId, setAdminId] = useState('');
@@ -38,6 +46,11 @@ export default function AdminPanel({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [activeTab, setActiveTab] = useState<'bookings' | 'menu' | 'gallery' | 'reviews'>('bookings');
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    id: string;
+    type: 'booking' | 'menu' | 'gallery' | 'review';
+    message: string;
+  } | null>(null);
 
   // Forms State
   const [menuName, setMenuName] = useState('');
@@ -46,11 +59,13 @@ export default function AdminPanel({
   const [menuPrice, setMenuPrice] = useState('');
   const [menuImage, setMenuImage] = useState('');
   const [menuIsPremium, setMenuIsPremium] = useState(false);
+  const [menuFile, setMenuFile] = useState<File | null>(null);
 
   const [galleryTitle, setGalleryTitle] = useState('');
   const [galleryCat, setGalleryCat] = useState<'WEDDING' | 'BIRTHDAY' | 'LONGEVITY' | 'CORPORATE' | 'CATERING' | 'BUFFET'>('WEDDING');
   const [galleryDate, setGalleryDate] = useState('2026.07');
   const [galleryImage, setGalleryImage] = useState('');
+  const [galleryFile, setGalleryFile] = useState<File | null>(null);
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
@@ -83,6 +98,11 @@ export default function AdminPanel({
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>, target: 'menu' | 'gallery') => {
     const file = e.target.files?.[0];
     if (file) {
+      if (target === 'menu') {
+        setMenuFile(file);
+      } else {
+        setGalleryFile(file);
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         if (typeof reader.result === 'string') {
@@ -109,9 +129,42 @@ export default function AdminPanel({
   };
 
   const deleteBooking = (id: string) => {
-    if (confirm('선택하신 예약 정보를 영구히 삭제하시겠습니까?')) {
-      onUpdateReservations(reservations.filter(res => res.id !== id));
+    setDeleteConfirm({
+      id,
+      type: 'booking',
+      message: '선택하신 예약 정보를 영구히 삭제하시겠습니까?'
+    });
+  };
+
+  const executeDelete = () => {
+    if (!deleteConfirm) return;
+    const { id, type } = deleteConfirm;
+    if (type === 'booking') {
+      if (onDeleteReservation) {
+        onDeleteReservation(id);
+      } else {
+        onUpdateReservations(reservations.filter(res => res.id !== id));
+      }
+    } else if (type === 'menu') {
+      if (onDeleteMenuItem) {
+        onDeleteMenuItem(id);
+      } else {
+        onUpdateMenuItems(menuItems.filter(item => item.id !== id));
+      }
+    } else if (type === 'gallery') {
+      if (onDeleteGalleryItem) {
+        onDeleteGalleryItem(id);
+      } else {
+        onUpdateGalleryItems(galleryItems.filter(item => item.id !== id));
+      }
+    } else if (type === 'review') {
+      if (onDeleteReview) {
+        onDeleteReview(id);
+      } else {
+        onUpdateReviews(reviews.filter(r => r.id !== id));
+      }
     }
+    setDeleteConfirm(null);
   };
 
   // Add Menu Item
@@ -127,7 +180,13 @@ export default function AdminPanel({
 
     let finalImage = menuImage;
     try {
-      if (menuImage.startsWith('data:')) {
+      if (menuFile) {
+        const fileExt = menuFile.name.split('.').pop() || 'png';
+        const storageRef = ref(storage, `menu/${Date.now()}.${fileExt}`);
+        const snapshot = await uploadBytes(storageRef, menuFile);
+        const downloadUrl = await getDownloadURL(snapshot.ref);
+        finalImage = downloadUrl;
+      } else if (menuImage.startsWith('data:')) {
         const fileExt = menuImage.split(';')[0].split('/')[1]?.split('+')[0] || 'png';
         const storageRef = ref(storage, `menu/${Date.now()}.${fileExt}`);
         const snapshot = await uploadString(storageRef, menuImage, 'data_url');
@@ -156,6 +215,7 @@ export default function AdminPanel({
       setMenuDesc('');
       setMenuPrice('');
       setMenuImage('');
+      setMenuFile(null);
       setMenuIsPremium(false);
       alert('새 메뉴가 정상적으로 등록되었습니다!');
     } catch (error) {
@@ -169,9 +229,11 @@ export default function AdminPanel({
 
   // Delete Menu Item
   const handleDeleteMenuItem = (id: string) => {
-    if (confirm('이 요리를 메뉴 카탈로그에서 제외하시겠습니까?')) {
-      onUpdateMenuItems(menuItems.filter(item => item.id !== id));
-    }
+    setDeleteConfirm({
+      id,
+      type: 'menu',
+      message: '이 요리를 메뉴 카탈로그에서 제외하시겠습니까?'
+    });
   };
 
   // Add Gallery Item
@@ -187,7 +249,13 @@ export default function AdminPanel({
 
     let finalImage = galleryImage;
     try {
-      if (galleryImage.startsWith('data:')) {
+      if (galleryFile) {
+        const fileExt = galleryFile.name.split('.').pop() || 'png';
+        const storageRef = ref(storage, `gallery/${Date.now()}.${fileExt}`);
+        const snapshot = await uploadBytes(storageRef, galleryFile);
+        const downloadUrl = await getDownloadURL(snapshot.ref);
+        finalImage = downloadUrl;
+      } else if (galleryImage.startsWith('data:')) {
         const fileExt = galleryImage.split(';')[0].split('/')[1]?.split('+')[0] || 'png';
         const storageRef = ref(storage, `gallery/${Date.now()}.${fileExt}`);
         const snapshot = await uploadString(storageRef, galleryImage, 'data_url');
@@ -209,6 +277,7 @@ export default function AdminPanel({
 
       setGalleryTitle('');
       setGalleryImage('');
+      setGalleryFile(null);
       alert('새로운 행사 전경 사진이 성공적으로 업로드되었습니다!');
     } catch (error) {
       console.error("Upload error:", error);
@@ -221,9 +290,11 @@ export default function AdminPanel({
 
   // Delete Gallery Item
   const handleDeleteGalleryItem = (id: string) => {
-    if (confirm('해당 이미지를 갤러리에서 삭제하시겠습니까?')) {
-      onUpdateGalleryItems(galleryItems.filter(item => item.id !== id));
-    }
+    setDeleteConfirm({
+      id,
+      type: 'gallery',
+      message: '해당 이미지를 갤러리에서 삭제하시겠습니까?'
+    });
   };
 
   // Login view (matching image 3)
@@ -627,7 +698,7 @@ export default function AdminPanel({
                         <img src={menuImage} alt="미리보기" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         <button
                           type="button"
-                          onClick={() => setMenuImage('')}
+                          onClick={() => { setMenuImage(''); setMenuFile(null); }}
                           className="absolute top-1 right-1 bg-black/80 hover:bg-black text-white p-1 rounded-full text-[10px] border border-neutral-800 cursor-pointer"
                         >
                           ✕ 제거
@@ -817,7 +888,7 @@ export default function AdminPanel({
                         <img src={galleryImage} alt="미리보기" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         <button
                           type="button"
-                          onClick={() => setGalleryImage('')}
+                          onClick={() => { setGalleryImage(''); setGalleryFile(null); }}
                           className="absolute top-1 right-1 bg-black/80 hover:bg-black text-white p-1 rounded-full text-[10px] border border-neutral-800 cursor-pointer"
                         >
                           ✕ 제거
@@ -967,9 +1038,11 @@ export default function AdminPanel({
                         <td className="py-4 px-6 text-center">
                           <button
                             onClick={() => {
-                              if (confirm('이 후기를 영구히 삭제하시겠습니까? (삭제 즉시 홈페이지에서 노출 제한됩니다)')) {
-                                onUpdateReviews(reviews.filter(r => r.id !== rev.id));
-                              }
+                              setDeleteConfirm({
+                                id: rev.id,
+                                type: 'review',
+                                message: '이 후기를 영구히 삭제하시겠습니까? (삭제 즉시 홈페이지에서 노출 제한됩니다)'
+                              });
                             }}
                             className="w-8 h-8 bg-neutral-900 hover:bg-red-950/60 text-gray-500 hover:text-red-400 border border-neutral-800 rounded flex items-center justify-center transition cursor-pointer mx-auto"
                             title="삭제"
@@ -997,6 +1070,38 @@ export default function AdminPanel({
         </main>
 
       </div>
+
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="w-full max-w-sm bg-neutral-950 border border-neutral-800 rounded-xl p-6 shadow-2xl text-center space-y-5">
+            <div className="w-12 h-12 bg-red-950/40 border border-red-900 rounded-full flex items-center justify-center mx-auto text-red-400">
+              <Trash2 size={20} />
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-gray-200">데이터 삭제 확인</h3>
+              <p className="text-xs text-gray-400 leading-relaxed font-sans">
+                {deleteConfirm.message}
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="py-2.5 px-4 bg-neutral-900 hover:bg-neutral-850 text-gray-400 hover:text-white rounded-lg text-xs font-sans font-medium border border-neutral-800 transition cursor-pointer"
+              >
+                취소
+              </button>
+              <button
+                onClick={executeDelete}
+                className="py-2.5 px-4 bg-red-900 hover:bg-red-800 text-white rounded-lg text-xs font-sans font-medium transition cursor-pointer"
+              >
+                삭제하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

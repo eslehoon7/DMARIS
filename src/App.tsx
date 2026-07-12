@@ -242,12 +242,22 @@ export default function App() {
   // Sync updaters to handle Firebase writes
   const handleUpdateReservations = async (newList: Reservation[]) => {
     try {
-      const currentIds = new Set(newList.map(r => r.id));
-      const deleted = reservations.filter(r => !currentIds.has(r.id));
-      for (const item of deleted) {
+      const oldIds = new Set(reservations.map(r => r.id));
+      const newIds = new Set(newList.map(r => r.id));
+      
+      const toDelete = reservations.filter(r => !newIds.has(r.id));
+      for (const item of toDelete) {
         await deleteDoc(doc(db, "reservations", item.id));
       }
-      for (const item of newList) {
+
+      const oldMap = new Map(reservations.map(r => [r.id, r]));
+      const toWrite = newList.filter(item => {
+        const oldItem = oldMap.get(item.id);
+        if (!oldItem) return true;
+        return JSON.stringify(item) !== JSON.stringify(oldItem);
+      });
+
+      for (const item of toWrite) {
         await setDoc(doc(db, "reservations", item.id), item);
       }
     } catch (e) {
@@ -258,12 +268,22 @@ export default function App() {
 
   const handleUpdateMenuItems = async (newList: MenuItem[]) => {
     try {
-      const currentIds = new Set(newList.map(r => r.id));
-      const deleted = menuItems.filter(r => !currentIds.has(r.id));
-      for (const item of deleted) {
+      const oldIds = new Set(menuItems.map(r => r.id));
+      const newIds = new Set(newList.map(r => r.id));
+
+      const toDelete = menuItems.filter(r => !newIds.has(r.id));
+      for (const item of toDelete) {
         await deleteDoc(doc(db, "menu_items", item.id));
       }
-      for (const item of newList) {
+
+      const oldMap = new Map(menuItems.map(r => [r.id, r]));
+      const toWrite = newList.filter(item => {
+        const oldItem = oldMap.get(item.id);
+        if (!oldItem) return true;
+        return JSON.stringify(item) !== JSON.stringify(oldItem);
+      });
+
+      for (const item of toWrite) {
         await setDoc(doc(db, "menu_items", item.id), item);
       }
     } catch (e) {
@@ -274,12 +294,22 @@ export default function App() {
 
   const handleUpdateGalleryItems = async (newList: GalleryItem[]) => {
     try {
-      const currentIds = new Set(newList.map(r => r.id));
-      const deleted = galleryItems.filter(r => !currentIds.has(r.id));
-      for (const item of deleted) {
+      const oldIds = new Set(galleryItems.map(r => r.id));
+      const newIds = new Set(newList.map(r => r.id));
+
+      const toDelete = galleryItems.filter(r => !newIds.has(r.id));
+      for (const item of toDelete) {
         await deleteDoc(doc(db, "gallery_items", item.id));
       }
-      for (const item of newList) {
+
+      const oldMap = new Map(galleryItems.map(r => [r.id, r]));
+      const toWrite = newList.filter(item => {
+        const oldItem = oldMap.get(item.id);
+        if (!oldItem) return true;
+        return JSON.stringify(item) !== JSON.stringify(oldItem);
+      });
+
+      for (const item of toWrite) {
         await setDoc(doc(db, "gallery_items", item.id), item);
       }
     } catch (e) {
@@ -290,12 +320,22 @@ export default function App() {
 
   const handleUpdateReviews = async (newList: Review[]) => {
     try {
-      const currentIds = new Set(newList.map(r => r.id));
-      const deleted = reviews.filter(r => !currentIds.has(r.id));
-      for (const item of deleted) {
+      const oldIds = new Set(reviews.map(r => r.id));
+      const newIds = new Set(newList.map(r => r.id));
+
+      const toDelete = reviews.filter(r => !newIds.has(r.id));
+      for (const item of toDelete) {
         await deleteDoc(doc(db, "reviews", item.id));
       }
-      for (const item of newList) {
+
+      const oldMap = new Map(reviews.map(r => [r.id, r]));
+      const toWrite = newList.filter(item => {
+        const oldItem = oldMap.get(item.id);
+        if (!oldItem) return true;
+        return JSON.stringify(item) !== JSON.stringify(oldItem);
+      });
+
+      for (const item of toWrite) {
         await setDoc(doc(db, "reviews", item.id), item);
       }
     } catch (e) {
@@ -304,10 +344,50 @@ export default function App() {
     setReviews(newList);
   };
 
+  const handleDeleteReservation = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "reservations", id));
+      setReservations(prev => prev.filter(item => item.id !== id));
+    } catch (e) {
+      console.error("Error deleting reservation:", e);
+      alert("예약 정보를 삭제하는 도중 오류가 발생했습니다: " + (e instanceof Error ? e.message : String(e)));
+    }
+  };
+
+  const handleDeleteMenuItem = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "menu_items", id));
+      setMenuItems(prev => prev.filter(item => item.id !== id));
+    } catch (e) {
+      console.error("Error deleting menu item:", e);
+      alert("메뉴를 삭제하는 도중 오류가 발생했습니다: " + (e instanceof Error ? e.message : String(e)));
+    }
+  };
+
+  const handleDeleteGalleryItem = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "gallery_items", id));
+      setGalleryItems(prev => prev.filter(item => item.id !== id));
+    } catch (e) {
+      console.error("Error deleting gallery item:", e);
+      alert("이미지를 삭제하는 도중 오류가 발생했습니다: " + (e instanceof Error ? e.message : String(e)));
+    }
+  };
+
+  const handleDeleteReview = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "reviews", id));
+      setReviews(prev => prev.filter(item => item.id !== id));
+    } catch (e) {
+      console.error("Error deleting review:", e);
+      alert("후기를 삭제하는 도중 오류가 발생했습니다: " + (e instanceof Error ? e.message : String(e)));
+    }
+  };
+
   // UI Control States
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeGalleryTab, setActiveGalleryTab] = useState<'ALL' | 'WEDDING' | 'BIRTHDAY' | 'CORPORATE' | 'CATERING'>('ALL');
+  const [activeGalleryTab, setActiveGalleryTab] = useState<'ALL' | 'WEDDING' | 'BIRTHDAY' | 'CORPORATE' | 'CATERING' | 'BUFFET'>('ALL');
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
   const [isServicesHovered, setIsServicesHovered] = useState(false);
@@ -364,11 +444,15 @@ export default function App() {
       else if (title?.includes('사은회') || title?.includes('시상식') || title?.includes('뷔페 홀')) subCat = '사은회·시상식';
       else subCat = '연말파티';
     }
-    else if (category === 'CATERING' || category === 'BUFFET') {
+    else if (category === 'CATERING') {
       tabIndex = 4;
       if (title?.includes('디저트') || title?.includes('핑거')) subCat = '핑거푸드';
       else if (title?.includes('스시') || title?.includes('뷔페') || title?.includes('케이터링')) subCat = '럭셔리뷔페';
       else subCat = '홈파티박스';
+    }
+    else if (category === 'BUFFET') {
+      tabIndex = 5;
+      subCat = '스페셜 뷔페';
     }
     else tabIndex = 0; // fallback default
     
@@ -555,6 +639,7 @@ export default function App() {
             onAboutClick={() => setIsAboutModalOpen(true)}
             onAdminClick={() => setIsAdminOpen(true)}
             scrollToSection={scrollToSection}
+            galleryItems={galleryItems}
           />
         </div>
       ) : (
@@ -861,7 +946,8 @@ export default function App() {
               { id: 'WEDDING', name: '웨딩' },
               { id: 'BIRTHDAY', name: '돌잔치' },
               { id: 'CORPORATE', name: '기업행사' },
-              { id: 'CATERING', name: '케이터링' }
+              { id: 'CATERING', name: '케이터링' },
+              { id: 'BUFFET', name: '스페셜 뷔페' }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -1153,6 +1239,10 @@ export default function App() {
             onUpdateMenuItems={handleUpdateMenuItems}
             onUpdateGalleryItems={handleUpdateGalleryItems}
             onUpdateReviews={handleUpdateReviews}
+            onDeleteReservation={handleDeleteReservation}
+            onDeleteMenuItem={handleDeleteMenuItem}
+            onDeleteGalleryItem={handleDeleteGalleryItem}
+            onDeleteReview={handleDeleteReview}
             onClose={() => setIsAdminOpen(false)}
           />
         )}
