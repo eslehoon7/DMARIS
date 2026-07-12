@@ -116,8 +116,8 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
                   <Clock size={16} />
                 </div>
                 <div>
-                  <h4 className="text-xs text-gray-500 uppercase tracking-wider font-mono">드마리스 부천점 위치</h4>
-                  <p className="text-brand-cream text-sm">경기 부천시 원미구 드마리스 타워 3층</p>
+                  <h4 className="text-xs text-gray-500 uppercase tracking-wider font-mono">드마리스 위치</h4>
+                  <p className="text-brand-cream text-sm">드마리스 타워 3층</p>
                 </div>
               </div>
             </div>

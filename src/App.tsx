@@ -11,6 +11,8 @@ import {
   initialReservations, 
   initialReviews 
 } from './data/initialData';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, query } from "firebase/firestore";
+import { db } from "./lib/firebase";
 import BookingForm from './components/BookingForm';
 import AdminPanel from './components/AdminPanel';
 import ServicePage from './components/ServicePage';
@@ -124,6 +126,184 @@ export default function App() {
     localStorage.setItem('dmaris_reviews_v1', JSON.stringify(reviews));
   }, [reviews]);
 
+  // Firestore Real-time synchronization & seeding
+  useEffect(() => {
+    const q = query(collection(db, "gallery_items"));
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      if (snapshot.empty) {
+        const batch = writeBatch(db);
+        initialGalleryItems.forEach((item) => {
+          const docRef = doc(db, "gallery_items", item.id);
+          batch.set(docRef, item);
+        });
+        await batch.commit();
+      } else {
+        const items: GalleryItem[] = [];
+        snapshot.forEach((doc) => {
+          items.push(doc.data() as GalleryItem);
+        });
+        items.sort((a, b) => {
+          const getNum = (id: string) => {
+            if (id.startsWith('g-')) {
+              return parseInt(id.replace('g-', '')) || Date.now();
+            }
+            return parseInt(id.replace('g', '')) || 0;
+          };
+          return getNum(b.id) - getNum(a.id);
+        });
+        setGalleryItems(items);
+      }
+    }, (error) => {
+      console.error("Error loading gallery_items:", error);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const q = query(collection(db, "menu_items"));
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      if (snapshot.empty) {
+        const batch = writeBatch(db);
+        initialMenuItems.forEach((item) => {
+          const docRef = doc(db, "menu_items", item.id);
+          batch.set(docRef, item);
+        });
+        await batch.commit();
+      } else {
+        const items: MenuItem[] = [];
+        snapshot.forEach((doc) => {
+          items.push(doc.data() as MenuItem);
+        });
+        items.sort((a, b) => {
+          const getNum = (id: string) => {
+            if (id.startsWith('m-')) {
+              return parseInt(id.replace('m-', '')) || Date.now();
+            }
+            return parseInt(id.replace('m', '')) || 0;
+          };
+          return getNum(b.id) - getNum(a.id);
+        });
+        setMenuItems(items);
+      }
+    }, (error) => {
+      console.error("Error loading menu_items:", error);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const q = query(collection(db, "reservations"));
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      if (snapshot.empty) {
+        const batch = writeBatch(db);
+        initialReservations.forEach((item) => {
+          const docRef = doc(db, "reservations", item.id);
+          batch.set(docRef, item);
+        });
+        await batch.commit();
+      } else {
+        const items: Reservation[] = [];
+        snapshot.forEach((doc) => {
+          items.push(doc.data() as Reservation);
+        });
+        items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        setReservations(items);
+      }
+    }, (error) => {
+      console.error("Error loading reservations:", error);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const q = query(collection(db, "reviews"));
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      if (snapshot.empty) {
+        const batch = writeBatch(db);
+        initialReviews.forEach((item) => {
+          const docRef = doc(db, "reviews", item.id);
+          batch.set(docRef, item);
+        });
+        await batch.commit();
+      } else {
+        const items: Review[] = [];
+        snapshot.forEach((doc) => {
+          items.push(doc.data() as Review);
+        });
+        items.sort((a, b) => b.date.localeCompare(a.date));
+        setReviews(items);
+      }
+    }, (error) => {
+      console.error("Error loading reviews:", error);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Sync updaters to handle Firebase writes
+  const handleUpdateReservations = async (newList: Reservation[]) => {
+    try {
+      const currentIds = new Set(newList.map(r => r.id));
+      const deleted = reservations.filter(r => !currentIds.has(r.id));
+      for (const item of deleted) {
+        await deleteDoc(doc(db, "reservations", item.id));
+      }
+      for (const item of newList) {
+        await setDoc(doc(db, "reservations", item.id), item);
+      }
+    } catch (e) {
+      console.error("Sync reservations error:", e);
+    }
+    setReservations(newList);
+  };
+
+  const handleUpdateMenuItems = async (newList: MenuItem[]) => {
+    try {
+      const currentIds = new Set(newList.map(r => r.id));
+      const deleted = menuItems.filter(r => !currentIds.has(r.id));
+      for (const item of deleted) {
+        await deleteDoc(doc(db, "menu_items", item.id));
+      }
+      for (const item of newList) {
+        await setDoc(doc(db, "menu_items", item.id), item);
+      }
+    } catch (e) {
+      console.error("Sync menu_items error:", e);
+    }
+    setMenuItems(newList);
+  };
+
+  const handleUpdateGalleryItems = async (newList: GalleryItem[]) => {
+    try {
+      const currentIds = new Set(newList.map(r => r.id));
+      const deleted = galleryItems.filter(r => !currentIds.has(r.id));
+      for (const item of deleted) {
+        await deleteDoc(doc(db, "gallery_items", item.id));
+      }
+      for (const item of newList) {
+        await setDoc(doc(db, "gallery_items", item.id), item);
+      }
+    } catch (e) {
+      console.error("Sync gallery_items error:", e);
+    }
+    setGalleryItems(newList);
+  };
+
+  const handleUpdateReviews = async (newList: Review[]) => {
+    try {
+      const currentIds = new Set(newList.map(r => r.id));
+      const deleted = reviews.filter(r => !currentIds.has(r.id));
+      for (const item of deleted) {
+        await deleteDoc(doc(db, "reviews", item.id));
+      }
+      for (const item of newList) {
+        await setDoc(doc(db, "reviews", item.id), item);
+      }
+    } catch (e) {
+      console.error("Sync reviews error:", e);
+    }
+    setReviews(newList);
+  };
+
   // UI Control States
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -146,7 +326,12 @@ export default function App() {
   }, [isServicesHovered]);
 
   // Append new reservation locally
-  const handleNewReservation = (newRes: Reservation) => {
+  const handleNewReservation = async (newRes: Reservation) => {
+    try {
+      await setDoc(doc(db, "reservations", newRes.id), newRes);
+    } catch (error) {
+      console.error("Error creating reservation:", error);
+    }
     setReservations(prev => [newRes, ...prev]);
   };
 
@@ -334,7 +519,7 @@ export default function App() {
             </div>
 
             <div className="mt-auto text-center space-y-2 text-xs text-gray-500 font-mono py-4">
-              <p>DMARIS PREMIUM BUCHON</p>
+              <p>DMARIS PREMIUM</p>
               <p>예약상담: 010-8078-4597</p>
             </div>
           </motion.div>
@@ -345,7 +530,12 @@ export default function App() {
         <div className="pt-16">
           <ReviewPage
             reviews={reviews}
-            onAddReview={(newReview) => {
+            onAddReview={async (newReview) => {
+              try {
+                await setDoc(doc(db, "reviews", newReview.id), newReview);
+              } catch (e) {
+                console.error("Error saving review:", e);
+              }
               setReviews((prev) => [newReview, ...prev]);
             }}
             onClose={() => setIsReviewPageOpen(false)}
@@ -397,7 +587,7 @@ export default function App() {
             <div className="flex items-center justify-center gap-2">
               <span className="w-8 h-[1px] bg-brand-bronze" />
               <span className="font-mono text-xs tracking-[0.3em] uppercase text-brand-bronze font-bold">
-                BUCHEON · DMARIS PREMIUM
+                DMARIS PREMIUM
               </span>
               <span className="w-8 h-[1px] bg-brand-bronze" />
             </div>
@@ -835,7 +1025,7 @@ export default function App() {
           <div className="space-y-3">
             <h4 className="text-brand-cream font-serif font-semibold tracking-wider">드마리스 명가</h4>
             <p className="leading-relaxed text-[11px] text-gray-400">
-              부천의 랜드마크로써 최고급 대규모 연회를 안정감 있고 우아하게 책임지며, 평생 간직할 인생의 아름다운 장면을 선물합니다.
+              최고급 대규모 연회를 안정감 있고 우아하게 책임지며, 평생 간직할 인생의 아름다운 장면을 선물합니다.
             </p>
           </div>
 
@@ -867,12 +1057,12 @@ export default function App() {
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 text-[11px] text-gray-600">
             <div className="space-y-1">
-              <p>주소: 경기도 부천시 원미구 신흥로 150 드마리스 타워 3층 | 대표자: 드마리스 부천 지점 관리 위원회</p>
+              <p>주소: 드마리스 타워 3층 | 대표자: 드마리스 지점 관리 위원회</p>
               <p>사업자등록번호: 120-12-34567 | 전화번호: 010-8078-4597 | 이메일: dmarisbnc.co.kr</p>
             </div>
             
             <div className="text-left md:text-right space-y-1">
-              <p>© 2026 DMARIS BUCHEON. ALL RIGHTS RESERVED.</p>
+              <p>© 2026 DMARIS. ALL RIGHTS RESERVED.</p>
               <p className="text-[9px] text-gray-700">All photographs are simulated representative graphics of premium culinary arts.</p>
             </div>
           </div>
@@ -959,10 +1149,10 @@ export default function App() {
             menuItems={menuItems}
             galleryItems={galleryItems}
             reviews={reviews}
-            onUpdateReservations={setReservations}
-            onUpdateMenuItems={setMenuItems}
-            onUpdateGalleryItems={setGalleryItems}
-            onUpdateReviews={setReviews}
+            onUpdateReservations={handleUpdateReservations}
+            onUpdateMenuItems={handleUpdateMenuItems}
+            onUpdateGalleryItems={handleUpdateGalleryItems}
+            onUpdateReviews={handleUpdateReviews}
             onClose={() => setIsAdminOpen(false)}
           />
         )}

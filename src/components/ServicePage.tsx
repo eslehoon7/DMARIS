@@ -631,12 +631,12 @@ export default function ServicePage({
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 text-[11px] text-gray-600">
             <div className="space-y-1">
-              <p>주소: 경기도 부천시 원미구 신흥로 150 드마리스 타워 3층 | 대표자: 드마리스 부천 지점 관리 위원회</p>
+              <p>주소: 드마리스 타워 3층 | 대표자: 드마리스 지점 관리 위원회</p>
               <p>사업자등록번호: 120-12-34567 | 전화번호: 010-8078-4597 | 이메일: dmarisbnc.co.kr</p>
             </div>
             
             <div className="text-left md:text-right space-y-1">
-              <p>© 2026 DMARIS BUCHEON. ALL RIGHTS RESERVED.</p>
+              <p>© 2026 DMARIS. ALL RIGHTS RESERVED.</p>
               <p className="text-[9px] text-gray-700">All photographs are simulated representative graphics of premium culinary arts.</p>
             </div>
           </div>

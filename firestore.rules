@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidReservation(data) {
+      return data.keys().hasAll(['id', 'eventType', 'date', 'time', 'guests', 'name', 'contact', 'notes', 'status', 'createdAt'])
+        && data.keys().size() == 10
+        && data.id is string && data.id.size() <= 128
+        && data.eventType is string && data.eventType.size() <= 100
+        && data.date is string && data.date.size() <= 50
+        && data.time is string && data.time.size() <= 20
+        && data.guests is int
+        && data.name is string && data.name.size() <= 100
+        && data.contact is string && data.contact.size() <= 100
+        && data.notes is string && data.notes.size() <= 2000
+        && data.status is string && data.status in ['PENDING', 'APPROVED', 'CANCELLED']
+        && data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    function isValidMenuItem(data) {
+      return data.keys().hasAll(['id', 'name', 'category', 'description', 'price', 'imageUrl', 'isPremium', 'isAvailable'])
+        && data.keys().size() == 8
+        && data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() <= 200
+        && data.category is string && data.category in ['ALL', 'STEAK', 'SUSHI', 'CHINESE', 'DESSERT', 'KOREAN']
+        && data.description is string && data.description.size() <= 2000
+        && data.price is int
+        && data.imageUrl is string && data.imageUrl.size() <= 2000
+        && data.isPremium is bool
+        && data.isAvailable is bool;
+    }
+
+    function isValidGalleryItem(data) {
+      return data.keys().hasAll(['id', 'title', 'category', 'date', 'imageUrl'])
+        && data.keys().size() == 5
+        && data.id is string && data.id.size() <= 128
+        && data.title is string && data.title.size() <= 200
+        && data.category is string && data.category in ['WEDDING', 'BIRTHDAY', 'LONGEVITY', 'CORPORATE', 'CATERING', 'BUFFET']
+        && data.date is string && data.date.size() <= 20
+        && data.imageUrl is string && data.imageUrl.size() <= 2000;
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll(['id', 'author', 'eventType', 'content', 'rating', 'date'])
+        && data.id is string && data.id.size() <= 128
+        && data.author is string && data.author.size() <= 100
+        && data.eventType is string && data.eventType.size() <= 100
+        && data.content is string && data.content.size() <= 4000
+        && data.rating is int
+        && data.date is string && data.date.size() <= 50;
+    }
+
+    match /reservations/{reservationId} {
+      allow read: if true;
+      allow create: if isValidId(reservationId) && isValidReservation(request.resource.data);
+      allow update: if isValidId(reservationId) && isValidReservation(request.resource.data);
+      allow delete: if isValidId(reservationId);
+    }
+
+    match /menu_items/{menuItemId} {
+      allow read: if true;
+      allow create: if isValidId(menuItemId) && isValidMenuItem(request.resource.data);
+      allow update: if isValidId(menuItemId) && isValidMenuItem(request.resource.data);
+      allow delete: if isValidId(menuItemId);
+    }
+
+    match /gallery_items/{galleryItemId} {
+      allow read: if true;
+      allow create: if isValidId(galleryItemId) && isValidGalleryItem(request.resource.data);
+      allow update: if isValidId(galleryItemId) && isValidGalleryItem(request.resource.data);
+      allow delete: if isValidId(galleryItemId);
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isValidId(reviewId) && isValidReview(request.resource.data);
+      allow update: if isValidId(reviewId) && isValidReview(request.resource.data);
+      allow delete: if isValidId(reviewId);
+    }
+  }
+}

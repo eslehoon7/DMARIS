@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "Reservation": {
+      "title": "Reservation",
+      "description": "Party/Event reservations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "eventType": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "guests": { "type": "integer" },
+        "name": { "type": "string" },
+        "contact": { "type": "string" },
+        "notes": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDING", "APPROVED", "CANCELLED"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "eventType", "date", "time", "guests", "name", "contact", "notes", "status", "createdAt"]
+    },
+    "MenuItem": {
+      "title": "MenuItem",
+      "description": "Menu dishes offered at Dmaris",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["ALL", "STEAK", "SUSHI", "CHINESE", "DESSERT", "KOREAN"] },
+        "description": { "type": "string" },
+        "price": { "type": "integer" },
+        "imageUrl": { "type": "string" },
+        "isPremium": { "type": "boolean" },
+        "isAvailable": { "type": "boolean" }
+      },
+      "required": ["id", "name", "category", "description", "price", "imageUrl", "isPremium", "isAvailable"]
+    },
+    "GalleryItem": {
+      "title": "GalleryItem",
+      "description": "Snaps of past events or space interior",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["WEDDING", "BIRTHDAY", "LONGEVITY", "CORPORATE", "CATERING", "BUFFET"] },
+        "date": { "type": "string" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["id", "title", "category", "date", "imageUrl"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Customer reviews and feedback",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "author": { "type": "string" },
+        "eventType": { "type": "string" },
+        "content": { "type": "string" },
+        "rating": { "type": "integer" },
+        "date": { "type": "string" },
+        "isVerified": { "type": "boolean" },
+        "verificationType": { "type": "string", "enum": ["booking", "receipt", "none"] },
+        "receiptImage": { "type": "string" },
+        "phoneLast4": { "type": "string" },
+        "phone": { "type": "string" },
+        "eventDate": { "type": "string" }
+      },
+      "required": ["id", "author", "eventType", "content", "rating", "date"]
+    }
+  },
+  "firestore": {
+    "/reservations/{reservationId}": {
+      "schema": "Reservation",
+      "description": "Collection of all reservation bookings"
+    },
+    "/menu_items/{menuItemId}": {
+      "schema": "MenuItem",
+      "description": "Collection of food menus"
+    },
+    "/gallery_items/{galleryItemId}": {
+      "schema": "GalleryItem",
+      "description": "Collection of party snapshots"
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Collection of customer reviews"
+    }
+  }
+}

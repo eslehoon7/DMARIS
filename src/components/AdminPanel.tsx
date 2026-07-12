@@ -7,6 +7,8 @@ import React, { useState } from 'react';
 import { Reservation, MenuItem, GalleryItem, Review } from '../types';
 import { Lock, User, FileText, Plus, LogOut, Check, X, Trash2, Camera, Tag, List, DollarSign, Image as ImageIcon, Sparkles, Star } from 'lucide-react';
 import { motion } from 'motion/react';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { storage } from '../lib/firebase';
 
 interface AdminPanelProps {
   reservations: Reservation[];
@@ -49,6 +51,9 @@ export default function AdminPanel({
   const [galleryCat, setGalleryCat] = useState<'WEDDING' | 'BIRTHDAY' | 'LONGEVITY' | 'CORPORATE' | 'CATERING' | 'BUFFET'>('WEDDING');
   const [galleryDate, setGalleryDate] = useState('2026.07');
   const [galleryImage, setGalleryImage] = useState('');
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
 
   // Handle Login (Image 3 Password prompt)
   const handleLogin = (e: React.FormEvent) => {
@@ -110,36 +115,56 @@ export default function AdminPanel({
   };
 
   // Add Menu Item
-  const handleAddMenuItem = (e: React.FormEvent) => {
+  const handleAddMenuItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!menuName || !menuPrice) {
       alert('메뉴 이름과 단가를 정확히 기입하세요.');
       return;
     }
 
-    const priceNum = parseInt(menuPrice) || 0;
-    const finalImage = menuImage || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=80';
+    setIsUploading(true);
+    setUploadStatus('메뉴 이미지를 Firebase Storage에 업로드 중...');
 
-    const newItem: MenuItem = {
-      id: 'm-' + Date.now(),
-      name: menuName,
-      category: menuCat,
-      description: menuDesc || '드마리스 파티시에와 셰프군단이 선사하는 라이브 스페셜 가치.',
-      price: priceNum,
-      imageUrl: finalImage,
-      isPremium: menuIsPremium,
-      isAvailable: true
-    };
+    let finalImage = menuImage;
+    try {
+      if (menuImage.startsWith('data:')) {
+        const fileExt = menuImage.split(';')[0].split('/')[1]?.split('+')[0] || 'png';
+        const storageRef = ref(storage, `menu/${Date.now()}.${fileExt}`);
+        const snapshot = await uploadString(storageRef, menuImage, 'data_url');
+        const downloadUrl = await getDownloadURL(snapshot.ref);
+        finalImage = downloadUrl;
+      } else if (!menuImage) {
+        finalImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=80';
+      }
 
-    onUpdateMenuItems([newItem, ...menuItems]);
-    
-    // reset form
-    setMenuName('');
-    setMenuDesc('');
-    setMenuPrice('');
-    setMenuImage('');
-    setMenuIsPremium(false);
-    alert('새 메뉴가 정상적으로 등록되었습니다!');
+      const priceNum = parseInt(menuPrice) || 0;
+      const newItem: MenuItem = {
+        id: 'm-' + Date.now(),
+        name: menuName,
+        category: menuCat,
+        description: menuDesc || '드마리스 파티시에와 셰프군단이 선사하는 라이브 스페셜 가치.',
+        price: priceNum,
+        imageUrl: finalImage,
+        isPremium: menuIsPremium,
+        isAvailable: true
+      };
+
+      onUpdateMenuItems([newItem, ...menuItems]);
+      
+      // reset form
+      setMenuName('');
+      setMenuDesc('');
+      setMenuPrice('');
+      setMenuImage('');
+      setMenuIsPremium(false);
+      alert('새 메뉴가 정상적으로 등록되었습니다!');
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert('메뉴 등록 중 이미지 업로드 실패: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsUploading(false);
+      setUploadStatus('');
+    }
   };
 
   // Delete Menu Item
@@ -150,28 +175,48 @@ export default function AdminPanel({
   };
 
   // Add Gallery Item
-  const handleAddGalleryItem = (e: React.FormEvent) => {
+  const handleAddGalleryItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!galleryTitle) {
       alert('갤러리 제목을 기록해 주세요.');
       return;
     }
 
-    const finalImage = galleryImage || 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80';
+    setIsUploading(true);
+    setUploadStatus('이미지를 Firebase Storage에 업로드 중...');
 
-    const newItem: GalleryItem = {
-      id: 'g-' + Date.now(),
-      title: galleryTitle,
-      category: galleryCat,
-      date: galleryDate || '2026.07',
-      imageUrl: finalImage
-    };
+    let finalImage = galleryImage;
+    try {
+      if (galleryImage.startsWith('data:')) {
+        const fileExt = galleryImage.split(';')[0].split('/')[1]?.split('+')[0] || 'png';
+        const storageRef = ref(storage, `gallery/${Date.now()}.${fileExt}`);
+        const snapshot = await uploadString(storageRef, galleryImage, 'data_url');
+        const downloadUrl = await getDownloadURL(snapshot.ref);
+        finalImage = downloadUrl;
+      } else if (!galleryImage) {
+        finalImage = 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80';
+      }
 
-    onUpdateGalleryItems([newItem, ...galleryItems]);
+      const newItem: GalleryItem = {
+        id: 'g-' + Date.now(),
+        title: galleryTitle,
+        category: galleryCat,
+        date: galleryDate || '2026.07',
+        imageUrl: finalImage
+      };
 
-    setGalleryTitle('');
-    setGalleryImage('');
-    alert('새로운 행사 전경 사진이 성공적으로 업로드되었습니다!');
+      onUpdateGalleryItems([newItem, ...galleryItems]);
+
+      setGalleryTitle('');
+      setGalleryImage('');
+      alert('새로운 행사 전경 사진이 성공적으로 업로드되었습니다!');
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert('이미지 업로드에 실패했습니다: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsUploading(false);
+      setUploadStatus('');
+    }
   };
 
   // Delete Gallery Item
@@ -311,18 +356,6 @@ export default function AdminPanel({
               >
                 <FileText size={15} />
                 <span>실시간 예약 관리 ({reservations.length})</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('menu')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs tracking-wider transition font-sans ${
-                  activeTab === 'menu'
-                    ? 'bg-brand-bronze text-white font-semibold'
-                    : 'text-neutral-400 hover:bg-neutral-900 hover:text-white'
-                }`}
-              >
-                <List size={15} />
-                <span>메뉴 체크 수정 ({menuItems.length})</span>
               </button>
 
               <button
@@ -620,9 +653,21 @@ export default function AdminPanel({
                   {/* Submit */}
                   <button
                     type="submit"
-                    className="w-full bg-brand-bronze hover:bg-brand-bronze-dark text-white font-semibold py-3 px-4 rounded-lg transition cursor-pointer"
+                    disabled={isUploading}
+                    className={`w-full text-white font-semibold py-3 px-4 rounded-lg transition cursor-pointer flex items-center justify-center gap-2 ${
+                      isUploading
+                        ? 'bg-neutral-800 cursor-not-allowed text-neutral-400 border border-neutral-700'
+                        : 'bg-brand-bronze hover:bg-brand-bronze-dark'
+                    }`}
                   >
-                    퀴진 신규 요리 등록하기
+                    {isUploading ? (
+                      <>
+                        <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                        <span>{uploadStatus || '업로드 중...'}</span>
+                      </>
+                    ) : (
+                      <span>퀴진 신규 요리 등록하기</span>
+                    )}
                   </button>
 
                 </form>
@@ -784,9 +829,21 @@ export default function AdminPanel({
                   {/* Submit */}
                   <button
                     type="submit"
-                    className="w-full bg-brand-bronze hover:bg-brand-bronze-dark text-white font-semibold py-3 px-4 rounded-lg transition cursor-pointer"
+                    disabled={isUploading}
+                    className={`w-full text-white font-semibold py-3 px-4 rounded-lg transition cursor-pointer flex items-center justify-center gap-2 ${
+                      isUploading
+                        ? 'bg-neutral-800 cursor-not-allowed text-neutral-400 border border-neutral-700'
+                        : 'bg-brand-bronze hover:bg-brand-bronze-dark'
+                    }`}
                   >
-                    갤러리 신규 스냅 이미지 등록하기
+                    {isUploading ? (
+                      <>
+                        <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                        <span>{uploadStatus || '업로드 중...'}</span>
+                      </>
+                    ) : (
+                      <span>갤러리 신규 스냅 이미지 등록하기</span>
+                    )}
                   </button>
 
                 </form>
