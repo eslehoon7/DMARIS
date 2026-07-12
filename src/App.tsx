@@ -12,7 +12,7 @@ import {
   initialReviews 
 } from './data/initialData';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, query } from "firebase/firestore";
-import { db } from "./lib/firebase";
+import { db, handleFirestoreError, OperationType } from "./lib/firebase";
 import BookingForm from './components/BookingForm';
 import AdminPanel from './components/AdminPanel';
 import ServicePage from './components/ServicePage';
@@ -99,10 +99,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : initialMenuItems;
   });
 
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(() => {
-    const saved = localStorage.getItem('dmaris_gallery_items_v2');
-    return saved ? JSON.parse(saved) : initialGalleryItems;
-  });
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(initialGalleryItems);
 
   const [reviews, setReviews] = useState<Review[]>(() => {
     const saved = localStorage.getItem('dmaris_reviews_v1');
@@ -117,10 +114,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('dmaris_menu_items', JSON.stringify(menuItems));
   }, [menuItems]);
-
-  useEffect(() => {
-    localStorage.setItem('dmaris_gallery_items_v2', JSON.stringify(galleryItems));
-  }, [galleryItems]);
 
   useEffect(() => {
     localStorage.setItem('dmaris_reviews_v1', JSON.stringify(reviews));
@@ -154,7 +147,7 @@ export default function App() {
         setGalleryItems(items);
       }
     }, (error) => {
-      console.error("Error loading gallery_items:", error);
+      handleFirestoreError(error, OperationType.GET, "gallery_items");
     });
     return () => unsubscribe();
   }, []);
@@ -313,7 +306,7 @@ export default function App() {
         await setDoc(doc(db, "gallery_items", item.id), item);
       }
     } catch (e) {
-      console.error("Sync gallery_items error:", e);
+      handleFirestoreError(e, OperationType.WRITE, "gallery_items");
     }
     setGalleryItems(newList);
   };
@@ -369,8 +362,7 @@ export default function App() {
       await deleteDoc(doc(db, "gallery_items", id));
       setGalleryItems(prev => prev.filter(item => item.id !== id));
     } catch (e) {
-      console.error("Error deleting gallery item:", e);
-      alert("이미지를 삭제하는 도중 오류가 발생했습니다: " + (e instanceof Error ? e.message : String(e)));
+      handleFirestoreError(e, OperationType.DELETE, `gallery_items/${id}`);
     }
   };
 
@@ -387,7 +379,7 @@ export default function App() {
   // UI Control States
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeGalleryTab, setActiveGalleryTab] = useState<'ALL' | 'WEDDING' | 'BIRTHDAY' | 'CORPORATE' | 'CATERING' | 'BUFFET'>('ALL');
+  const [activeGalleryTab, setActiveGalleryTab] = useState<'ALL' | 'WEDDING' | 'BIRTHDAY' | 'LONGEVITY' | 'CORPORATE' | 'CATERING' | 'BUFFET'>('ALL');
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
   const [isServicesHovered, setIsServicesHovered] = useState(false);
@@ -945,6 +937,7 @@ export default function App() {
               { id: 'ALL', name: '최근소식' },
               { id: 'WEDDING', name: '웨딩' },
               { id: 'BIRTHDAY', name: '돌잔치' },
+              { id: 'LONGEVITY', name: '장수연/회갑' },
               { id: 'CORPORATE', name: '기업행사' },
               { id: 'CATERING', name: '케이터링' },
               { id: 'BUFFET', name: '스페셜 뷔페' }
