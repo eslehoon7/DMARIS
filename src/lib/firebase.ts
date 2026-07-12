@@ -7,7 +7,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyDpPe2wf2ddDy0l8tNMZE2y4NdyNBK_aAU",
   authDomain: "onbrandium.firebaseapp.com",
   projectId: "onbrandium",
-  storageBucket: "onbrandium.firebasestorage.app",
+  storageBucket: "dmaris-932df.firebasestorage.app",
   messagingSenderId: "226462937186",
   appId: "1:226462937186:web:46fc76228b238aeffa613b"
 };
@@ -18,7 +18,7 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 // Pass custom databaseId to getFirestore
 const db = getFirestore(app, "ai-studio-dmarispremiumbuf-844eda9b-a845-4783-93c1-1e06e717b89e");
 
-const storage = getStorage(app);
+const storage = getStorage(app, "gs://dmaris-932df.firebasestorage.app");
 const auth = getAuth(app);
 
 export enum OperationType {
