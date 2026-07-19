@@ -508,7 +508,6 @@ export default function App() {
             <button onClick={() => { setIsReviewPageOpen(false); setIsServicePageOpen(true); setActiveServiceTab(0); setServicePageViewMode('service'); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(isServicePageOpen && servicePageViewMode === 'service') ? 'text-brand-bronze font-semibold' : ''}`}>Service</button>
             <button onClick={() => { setIsReviewPageOpen(false); setIsServicePageOpen(true); setActiveServiceTab(0); setServicePageViewMode('gallery'); setActiveServiceSubCategory('전체'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(isServicePageOpen && servicePageViewMode === 'gallery') ? 'text-brand-bronze font-semibold' : ''}`}>Gallery</button>
             <button onClick={() => { setIsServicePageOpen(false); setIsReviewPageOpen(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${isReviewPageOpen ? 'text-brand-bronze font-semibold' : ''}`}>Reviews</button>
-            <button onClick={() => { setIsReviewPageOpen(false); scrollToSection('reserve'); }} className="hover:text-brand-bronze transition cursor-pointer uppercase">Reservation</button>
           </nav>
 
           {/* Header Action Controls */}
