@@ -80,7 +80,7 @@ const services = [
     num: '05',
     title: 'CATERING',
     korTitle: '케이터링',
-    desc: '어디서든 품격 있는 음식으로\n특별함을 전합니다',
+    desc: '소규모 모임도,\n드마리스의 정성을 그대로 담아드립니다.',
     detail: '가정, 야외 가든, 기업 사무실 등 원하시는 특별한 장소로 셰프들이 직접 출동하여 라이브 푸드 스테이션을 설치하고 데코레이션부터 케이터링 서비스까지 완벽하게 제공합니다.',
     imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%BC%80%EC%9D%B4%ED%84%B0%EB%A7%8101.jpg?alt=media&token=556b5e80-21d0-4d3c-be45-144bc34db66d',
     icon: Coffee
