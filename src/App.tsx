@@ -44,14 +44,14 @@ const services = [
     num: '01',
     title: 'WEDDING',
     korTitle: '웨딩',
-    desc: '인생의 가장 빛나는 순간,\n완벽한 웨딩을 위한 맞춤 서비스',
+    desc: '두 사람의 새로운 시작,\n드마리스가 가장 아름답게 완성합니다.',
     detail: '호텔식 플라워 세팅, 미디어 파사드 조향 연출, 그리고 최고 명성을 가진 마스터 셰프 군단의 프리미엄 연회 요리를 통해 세상에 오직 하나뿐인 웨딩 시나리오를 지어 드립니다.',
     imageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80',
     icon: Heart
   },
   {
     num: '02',
-    title: 'FIRST BIRTHDAY PARTY',
+    title: 'DOLJANCHI PARTY',
     korTitle: '첫돌 파티',
     desc: '사랑스러운 첫 순간,\n정성과 품격으로 함께합니다',
     detail: '현대식·전통식 테마 돌상 커스텀, 유기농 재료 식단, 돌잡이 전담 연출 스태프 및 단독 룸 배정을 통해 온 가족이 편안하고 행복하게 머물 수 있는 축제의 장을 준비합니다.',
@@ -393,7 +393,7 @@ export default function App() {
     if (isServicesHovered) return;
     const interval = setInterval(() => {
       setActiveStoryIndex((prev) => (prev + 1) % services.length);
-    }, 4000);
+    }, 3000);
     return () => clearInterval(interval);
   }, [isServicesHovered]);
 
@@ -669,8 +669,8 @@ export default function App() {
             </div>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-light text-brand-cream tracking-tight leading-tight md:leading-normal">
-              당신의 챕터가 <br />
-              <span className="font-normal italic text-brand-bronze">이곳</span>에서 시작됩니다
+              품격 있는 순간, <br />
+              <span className="font-normal italic text-brand-bronze">드마리스</span>에서 완성됩니다
             </h1>
           </motion.div>
 
@@ -680,9 +680,8 @@ export default function App() {
             transition={{ delay: 0.4, duration: 0.8 }}
             className="text-gray-300 text-xs md:text-sm tracking-wider max-w-xl mx-auto font-sans leading-relaxed"
           >
-            품격 있는 공간, 정성의 가치로 완성되는 특별한 경험. <br />
-            웨딩 · 돌잔치 · 장수연 · 대형 기업 행사 · 출장 케이터링까지, <br />
-            인생에서 가장 눈부시게 빛날 순간을 셰프팀의 품격으로 채웁니다.
+            가족모임부터 돌잔치, 웨딩, 기업행사까지 <br />
+            특별한 하루를 더욱 특별하게 만드는 프리미엄 연회 공간
           </motion.p>
 
           <motion.div
@@ -737,36 +736,54 @@ export default function App() {
               <div className="space-y-3">
                 <span className="font-mono text-xs tracking-widest text-brand-bronze uppercase">01 / ABOUT DMARIS</span>
                 <h2 className="text-3xl md:text-4xl font-serif leading-tight font-light tracking-tight">
-                  한 끼의 식사가 아니라, <br />
-                  <span className="text-brand-bronze font-normal">그날의 기억</span>을 짓습니다
+                  부천을 대표하는 <br />
+                  <span className="text-brand-bronze font-normal">프리미엄 연회 공간</span>
                 </h2>
               </div>
 
               <div className="space-y-4 text-gray-600 text-sm leading-relaxed font-sans">
                 <p>
-                  드마리스는 정갈한 바다와 빛나는 태양, 그리고 최고의 정성이라는 뜻이 모여 완성되었습니다.<br />
-                  단순히 음식을 맛보는 뷔페의 고정관념을 뛰어넘어, 라이브 파인 다이닝 스테이션과<br />
-                  럭셔리 공간 연출이 결합된 하이엔드 연회 문화를 선도합니다.
+                  드마리스는 단순한 뷔페가 아닙니다.<br /><br />
+                  가족모임, 돌잔치, 회갑연, 웨딩, 기업행사까지<br />
+                  소중한 사람들과 함께하는 모든 순간을 위해<br />
+                  품격 있는 공간과 최고의 요리를 준비합니다.
                 </p>
                 <p>
-                  전국 최대 규모의 웅장한 대관 연회 홀가 셰프 군단이 즉석에서 시어링해 드리는 로스트 비프, <br />
-                  산지 직송 활어회 코너는 드마리스를 대표하는 프라이드 입니다.<br />
-                  당신의 가장 귀하고 아름다운 행사날, 드마리스는 마음을 다해 기억을 요리합니다.
+                  라이브 셰프의 즉석 요리와 다양한 프리미엄 메뉴,<br />
+                  넓고 쾌적한 단독 연회장,<br />
+                  그리고 행사 전담 매니저의 세심한 서비스까지.<br /><br />
+                  드마리스는 한 번의 식사가 아닌,<br />
+                  오랫동안 기억될 특별한 하루를 만들어 드립니다.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-xs font-sans">
                 <div className="bg-white/60 p-4 rounded-lg border border-neutral-200">
-                  <div className="font-serif text-brand-bronze text-base font-medium mb-1">SPACE DESIGN</div>
-                  <p className="text-gray-500 text-[11px]">단독 프라이빗 룸과 꽃길 장식</p>
+                  <div className="font-serif text-brand-bronze text-base font-medium mb-1">PRIVATE HALL</div>
+                  <p className="text-gray-500 text-[11px] leading-relaxed">
+                    <strong className="font-bold text-gray-700 block">단독 연회장</strong>
+                    <br />
+                    10인 가족모임부터<br />
+                    200인 대규모 행사까지
+                  </p>
                 </div>
                 <div className="bg-white/60 p-4 rounded-lg border border-neutral-200">
-                  <div className="font-serif text-brand-bronze text-base font-medium mb-1">CATERING</div>
-                  <p className="text-gray-500 text-[11px]">특급 호텔 셰프의 고품격 요리</p>
+                  <div className="font-serif text-brand-bronze text-base font-medium mb-1">LIVE DINING</div>
+                  <p className="text-gray-500 text-[11px] leading-relaxed">
+                    <strong className="font-bold text-gray-700 block">프리미엄 라이브 키친</strong>
+                    <br />
+                    즉석에서 완성되는<br />
+                    호텔급 라이브 요리
+                  </p>
                 </div>
                 <div className="bg-white/60 p-4 rounded-lg border border-neutral-200">
-                  <div className="font-serif text-brand-bronze text-base font-medium mb-1">PLANNING</div>
-                  <p className="text-gray-500 text-[11px]">전문 매니저의 전담 케어</p>
+                  <div className="font-serif text-brand-bronze text-base font-medium mb-1">EVENT SERVICE</div>
+                  <p className="text-gray-500 text-[11px] leading-relaxed">
+                    <strong className="font-bold text-gray-700 block">행사 전문 케어</strong>
+                    <br />
+                    돌잔치·회갑연·웨딩·기업행사<br />
+                    전담 매니저 진행
+                  </p>
                 </div>
               </div>
 
@@ -876,6 +893,17 @@ export default function App() {
             onMouseLeave={() => setIsServicesHovered(false)}
             className="mt-12 bg-white/80 rounded-sm p-6 border border-[#EFEBE4] max-w-4xl mx-auto shadow-sm backdrop-blur-sm overflow-hidden relative min-h-[140px] flex flex-col justify-center"
           >
+            {/* Visual timer progress bar */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-[#F5EFE6]">
+              <motion.div
+                key={`progress-${activeStoryIndex}`}
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 3, ease: "linear" }}
+                className="h-full bg-[#A68A70]"
+              />
+            </div>
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeStoryIndex}

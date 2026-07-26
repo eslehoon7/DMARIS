@@ -19,28 +19,29 @@ const serviceDetails = [
   {
     title: "WEDDING",
     korTitle: "웨딩",
-    tagline: "세상에서 가장 성스럽고 눈부신 약속의 순간",
-    desc: "인생 최고의 순간인 결혼식, 드마리스의 프리미엄 웨딩 서비스로 단 하나의 시나리오를 완성합니다. 호텔식 플라워 연출과 커스텀 플라워 길 장식, 최고 수준의 셰프가 즉석에서 요리하는 프리미엄 연회 요리가 함께하여 웅장하면서도 기품 넘치는 순간을 설계해 드립니다.",
+    tagline: "두 사람의 새로운 시작, 드마리스가 가장 아름답게 완성합니다.",
+    desc: "인생에서 가장 소중한 약속의 순간. 품격 있는 연회 공간과 정성 어린 프리미엄 다이닝,\n그리고 세심한 서비스가 어우러져 오랫동안 기억될 웨딩을 완성합니다.\n드마리스는 결혼식 그 이상의 감동을 선사합니다.",
     features: [
-      { name: "단독 홀 대관 및 연출", detail: "대규모 하객을 여유롭게 수용할 수 있는 웅장하고 품격 있는 단독 대관 연회 홀 지원" },
-      { name: "플라워 커스텀 셋업", detail: "전문 플로리스트의 감각으로 섬세하게 연출되는 격조 높은 생화 및 캔들 테마 로드" },
-      { name: "특급 호텔식 라이브 뷔페", detail: "드마리스 명품 셰프 군단이 엄선한 제철 식재료로 요리하는 하이엔드 라이브 뷔페 만찬" },
-      { name: "미디어 및 음향 하이 테크", detail: "고해상도 빔 프로젝터, 정교한 조명 시어링 및 시네마틱 오디오 음향 장비 완비" }
+      { name: "PRIVATE HALL", detail: "품격 있는 공간,\n프라이빗 연회장" },
+      { name: "PREMIUM DINING", detail: "최고의 미식,\n라이브 다이닝" },
+      { name: "CUSTOM DECORATION", detail: "감각적인 연출,\n맞춤 스타일링" },
+      { name: "TOTAL EVENT CARE", detail: "완벽한 진행,\n전담 매니저 케어" }
     ],
     imageUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&auto=format&fit=crop&q=80",
     icon: Heart,
     colorAccent: "#A68A70"
   },
   {
-    title: "FIRST BIRTHDAY PARTY",
-    korTitle: "첫돌파티",
-    tagline: "소중한 우리 아기의 첫 번째 생일, 사랑과 정성을 가득 담아",
-    desc: "우리 아기가 처음으로 맞이하는 일생에 단 한 번뿐인 소중한 날, 온 가족이 온전히 기쁨을 나누고 축하에만 전념하실 수 있도록 프라이빗하고 품격 있게 모든 순간을 연출합니다.",
+    title: "DOLJANCHI PARTY",
+    korTitle: "돌잔치",
+    tagline: "우리 아이의 첫번째 특별한 순간, 드마리스가 함께합니다.",
+    desc: "한 번뿐인 첫돌.\n가족의 축복과 아이의 첫 번째 추억이 더욱 특별하게 기억될 수 있도록\n품격 있는 공간과 정성 어린 음식, 세심한 돌잔치 서비스로 소중한 하루를 완성해드립니다.",
+    bottomDesc: "우리 아이의 첫 번째 특별한 순간, 드마리스가 함께합니다.\n품격 있는 공간과 정성 어린 음식, 그리고 세심한 서비스로 가족 모두가 행복한 돌잔치를 만들어드립니다.",
     features: [
-      { name: "전통 & 현대 테마 돌상", detail: "풍성하고 화사한 전통 한국식 돌상 차림 또는 감각적이고 세련된 유러피안 모던 돌상 스타일링" },
-      { name: "단독 프라이빗 룸 보장", detail: "소중한 직계 가족 및 지인분들과 아늑하고 쾌적하게 식사하실 수 있는 전용 다이닝 룸 배정" },
-      { name: "감성 포토 테이블 셋업", detail: "아기의 소중한 추억을 담은 성장 사진 액자 전시 및 감사 카드, 소품 무료 세팅 지원" },
-      { name: "돌잡이 사회자 및 진행", detail: "전문 전담 진행 스태프의 세련되고 유쾌한 돌잡이 이벤트 리드와 전체 타임라인 케어" }
+      { name: "PRIVATE PARTY", detail: "단독 돌잔치\n프라이빗 공간에서 편안한 가족행사" },
+      { name: "PREMIUM BUFFET", detail: "프리미엄 뷔페\n다양한 메뉴와 라이브 다이닝" },
+      { name: "DOL TABLE", detail: "돌상 연출\n감각적인 돌상과 포토존 스타일링" },
+      { name: "EVENT CARE", detail: "행사 진행\n전담 매니저의 세심한 케어" }
     ],
     imageUrl: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=1200&auto=format&fit=crop&q=80",
     icon: Gift,
@@ -576,7 +577,7 @@ export default function ServicePage({
               .marquee-track-smooth {
                 display: flex;
                 width: max-content;
-                animation: marquee-scroll 55s linear infinite;
+                animation: marquee-scroll 300s linear infinite;
               }
               .marquee-track-smooth:hover {
                 animation-play-state: paused;
@@ -646,7 +647,20 @@ export default function ServicePage({
                       </div>
                       <div className="space-y-1.5">
                         <h5 className="text-xs font-semibold text-neutral-800">{feature.name}</h5>
-                        <p className="text-[11px] text-neutral-500 leading-relaxed">{feature.detail}</p>
+                        <div className="text-[11px] leading-relaxed">
+                          {feature.detail.includes('\n') ? (
+                            feature.detail.split('\n').map((line, idx) => (
+                              <span
+                                key={idx}
+                                className="font-normal text-neutral-500 block"
+                              >
+                                {line}
+                              </span>
+                            ))
+                          ) : (
+                            <p className="text-neutral-500">{feature.detail}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -657,10 +671,10 @@ export default function ServicePage({
               <div className="bg-white rounded-sm p-6 md:p-8 border border-[#EFEBE4] shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="space-y-1.5 text-center md:text-left">
                   <h5 className="text-sm font-semibold text-neutral-800">
-                    드마리스 프리미엄 {currentService.korTitle} 연회와 만찬
+                    드마리스 프리미엄 {currentService.korTitle}
                   </h5>
-                  <p className="text-xs text-neutral-500">
-                    행사 전문 전담 플래너가 초기 상담부터 행사 마감까지 꼼꼼히 가이드해 드립니다.
+                  <p className="text-xs text-neutral-500 whitespace-pre-line">
+                    {(currentService as any).bottomDesc || "행사 전문 전담 플래너가 초기 상담부터 행사 마감까지 꼼꼼히 가이드해 드립니다."}
                   </p>
                 </div>
 
