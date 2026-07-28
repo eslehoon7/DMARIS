@@ -68,10 +68,10 @@ const serviceDetails = [
     tagline: "기업의 특별한 순간을 더욱 품격 있게",
     desc: "기업 행사부터 송년회, 신년회, 워크숍, 세미나, 단체모임까지,\n부천 드마리스는 넓고 쾌적한 연회 공간과 프리미엄 뷔페, 체계적인 예약 서비스를 통해 성공적인 기업행사를 함께합니다.",
     features: [
-      { name: "넓고 쾌적한 연회 공간", detail: "소규모 비즈니스 미팅부터 대규모 단체 연회까지 인원에 맞춘 다양한 크기의 전용 연회 공간을 제공합니다." },
-      { name: "프리미엄 뷔페 다이닝", detail: "신선한 최고급 식재료로 조리하는 라이브 뷔페 요리로 참석자 모두가 만족하는 비즈니스 만찬을 선사합니다." },
-      { name: "편리한 단체 예약 서비스", detail: "기업 전담 매니저가 1:1 맞춤 상담부터 견적 안내, 세부 일정까지 원스톱으로 지원해드립니다." },
-      { name: "다양한 기업행사 가능", detail: "송년회, 신년회, 세미나, 워크숍, 창립기념일 등 기업의 다양한 목적과 분위기에 맞추어 성공적인 행사를 연출합니다." }
+      { name: "넓고 쾌적한 연회 공간", detail: "소규모 비즈니스 미팅부터 대규모 단체 연회까지\n인원에 맞춘 다양한 크기의 전용 연회 공간을 제공합니다." },
+      { name: "프리미엄 뷔페 다이닝", detail: "신선한 최고급 식재료로 조리하는 라이브 뷔페 요리로\n참석자 모두가 만족하는 비즈니스 만찬을 선사합니다." },
+      { name: "편리한 단체 예약 서비스", detail: "기업 전담 매니저가 1:1 맞춤 상담부터 견적 안내,\n세부 일정까지 원스톱으로 지원해드립니다." },
+      { name: "다양한 기업행사 가능", detail: "송년회, 신년회, 세미나, 워크숍, 창립기념일 등 기업의 다양한 목적과\n분위기에 맞추어 성공적인 행사를 연출합니다." }
     ],
     imageUrl: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&auto=format&fit=crop&q=80",
     bottomTitle: "드마리스 프리미엄 기업연회",
@@ -104,10 +104,10 @@ const serviceDetails = [
     bottomTitle: "드마리스 프리미엄 출장뷔페",
     bottomDesc: "수많은 행사 경험으로 검증된 운영 노하우.\n행사 준비부터 음식 제공, 운영까지 드마리스가 함께합니다.",
     features: [
-      { name: "최대 800명 규모 출장뷔페 운영", detail: "소규모 행사부터 대형 행사까지, 풍부한 운영 경험을 바탕으로 규모에 맞는 출장뷔페를 제공합니다." },
+      { name: "최대 800명 규모 출장뷔페 운영", detail: "소규모 행사부터 대형 행사까지, 풍부한 운영 경험을 바탕으로\n규모에 맞는 출장뷔페를 제공합니다." },
       { name: "원스톱 행사 진행 시스템", detail: "행사 준비부터 운영까지 체계적인 시스템으로 행사의 부담을 줄여드립니다." },
-      { name: "다양한 행사 전문", detail: "기업행사, 체육대회, 성당·교회 행사, 학교 및 기관 행사, 야외행사, 웨딩 등 행사 목적에 맞는 출장뷔페를 제공합니다." },
-      { name: "풍부한 메뉴 구성과 맞춤 상담", detail: "행사 인원과 예산에 맞춰 다양한 메뉴를 제안해드리며 행사 목적에 맞는 최적의 구성을 상담을 통해 안내해드립니다." }
+      { name: "다양한 행사 전문", detail: "기업행사, 체육대회, 성당·교회 행사, 학교 및 기관 행사, 야외행사, 웨딩 등\n행사 목적에 맞는 출장뷔페를 제공합니다." },
+      { name: "풍부한 메뉴 구성과 맞춤 상담", detail: "행사 인원과 예산에 맞춰 다양한 메뉴를 제안해드리며,\n행사 목적에 맞는 최적의 구성을 상담을 통해 안내해드립니다." }
     ],
     imageUrl: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&auto=format&fit=crop&q=80",
     icon: ImageIcon,
@@ -567,7 +567,25 @@ export default function ServicePage({
                 </h1>
                 
                 <p className="text-sm text-neutral-600 leading-relaxed max-w-3xl whitespace-pre-line">
-                  {currentService.desc}
+                  {(() => {
+                    const phrases = ['최소 10인분부터', '최대 800명 규모의 대형 행사'];
+                    const found = phrases.find(p => currentService.desc.includes(p));
+                    if (found) {
+                      const parts = currentService.desc.split(found);
+                      return parts.reduce<React.ReactNode[]>((acc, part, i) => {
+                        acc.push(part);
+                        if (i < parts.length - 1) {
+                          acc.push(
+                            <strong key={i} className="font-bold text-neutral-900">
+                              {found}
+                            </strong>
+                          );
+                        }
+                        return acc;
+                      }, []);
+                    }
+                    return currentService.desc;
+                  })()}
                 </p>
               </div>
             </motion.div>
