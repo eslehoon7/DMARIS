@@ -165,6 +165,34 @@ export const initialGalleryItems: GalleryItem[] = [
     category: 'CORPORATE',
     date: '2026.03',
     imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 'g9',
+    title: '스몰 웨딩 연출',
+    category: 'WEDDING',
+    date: '2026.02',
+    imageUrl: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 'g10',
+    title: '현대식 돌상 파티',
+    category: 'BIRTHDAY',
+    date: '2026.02',
+    imageUrl: 'https://images.unsplash.com/photo-1517263904008-797480d25147?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 'g11',
+    title: '팔순 잔치 상차림',
+    category: 'LONGEVITY',
+    date: '2026.01',
+    imageUrl: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 'g12',
+    title: '기업 연말 파티',
+    category: 'CORPORATE',
+    date: '2026.01',
+    imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80'
   }
 ];
 

@@ -106,7 +106,7 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
                 </div>
                 <div>
                   <h4 className="text-xs text-gray-500 uppercase tracking-wider font-mono">예약 문의 전화</h4>
-                  <p className="text-brand-cream text-lg font-medium tracking-tight">010-8078-4597</p>
+                  <p className="text-brand-cream text-lg font-medium tracking-tight">032-323-3888</p>
                   <p className="text-xs text-gray-500">운영시간 09:00 - 20:00 (연중무휴)</p>
                 </div>
               </div>
@@ -117,7 +117,10 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
                 </div>
                 <div>
                   <h4 className="text-xs text-gray-500 uppercase tracking-wider font-mono">드마리스 위치</h4>
-                  <p className="text-brand-cream text-sm">드마리스 타워 3층</p>
+                  <p className="text-brand-cream text-sm">
+                    경기도 부천시 원미구 길주로71 <br />
+                    리파인빌 B/D 3층 드마리스 부천점
+                  </p>
                 </div>
               </div>
             </div>

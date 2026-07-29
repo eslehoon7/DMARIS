@@ -464,15 +464,21 @@ export default function App() {
 
 
   // Helper for scroll to sections smoothly
+  // Scroll to top when page views change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [isServicePageOpen, isReviewPageOpen, servicePageViewMode, activeServiceTab]);
+
   const scrollToSection = (id: string) => {
     setIsMobileMenuOpen(false);
     setIsServicePageOpen(false);
     setIsReviewPageOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => {
       const element = document.getElementById(id);
-      if (element) {
+      if (element && id !== 'brand') {
         element.scrollIntoView({ behavior: 'smooth' });
-      } else if (id === 'brand') {
+      } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }, 60);
@@ -504,8 +510,8 @@ export default function App() {
 
           {/* PC Navigation Links (Layout 2 spec) */}
           <nav className="hidden md:flex items-center gap-8 text-xs tracking-widest font-sans font-medium text-gray-400">
-            <button onClick={() => { setIsReviewPageOpen(false); scrollToSection('brand'); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(!isServicePageOpen && !isReviewPageOpen) ? 'text-brand-bronze font-semibold' : ''}`}>DMARIS</button>
-            <button onClick={() => { setIsReviewPageOpen(false); setIsServicePageOpen(true); setActiveServiceTab(0); setServicePageViewMode('service'); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(isServicePageOpen && servicePageViewMode === 'service') ? 'text-brand-bronze font-semibold' : ''}`}>Service</button>
+            <button onClick={() => { setIsServicePageOpen(false); setIsReviewPageOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(!isServicePageOpen && !isReviewPageOpen) ? 'text-brand-bronze font-semibold' : ''}`}>DMARIS</button>
+            <button onClick={() => { setIsReviewPageOpen(false); setIsServicePageOpen(true); setActiveServiceTab(0); setServicePageViewMode('service'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(isServicePageOpen && servicePageViewMode === 'service') ? 'text-brand-bronze font-semibold' : ''}`}>Service</button>
             <button onClick={() => { setIsReviewPageOpen(false); setIsServicePageOpen(true); setActiveServiceTab(0); setServicePageViewMode('gallery'); setActiveServiceSubCategory('전체'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(isServicePageOpen && servicePageViewMode === 'gallery') ? 'text-brand-bronze font-semibold' : ''}`}>Gallery</button>
             <button onClick={() => { setIsServicePageOpen(false); setIsReviewPageOpen(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${isReviewPageOpen ? 'text-brand-bronze font-semibold' : ''}`}>Reviews</button>
           </nav>
@@ -545,7 +551,12 @@ export default function App() {
           >
             <div className="flex flex-col space-y-4 pt-4 text-center">
               <button 
-                onClick={() => scrollToSection('brand')} 
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsServicePageOpen(false);
+                  setIsReviewPageOpen(false);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }} 
                 className="text-lg font-serif py-3 border-b border-neutral-900 text-brand-cream hover:text-brand-bronze transition"
               >
                 드마리스 브랜드 스토리
@@ -553,9 +564,11 @@ export default function App() {
               <button 
                 onClick={() => {
                   setIsMobileMenuOpen(false);
+                  setIsReviewPageOpen(false);
                   setIsServicePageOpen(true);
                   setActiveServiceTab(0);
                   setServicePageViewMode('service');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
                 }} 
                 className="text-lg font-serif py-3 border-b border-neutral-900 text-brand-cream hover:text-brand-bronze transition"
               >
@@ -668,7 +681,7 @@ export default function App() {
               <span className="w-8 h-[1px] bg-brand-bronze" />
             </div>
 
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-light text-brand-cream tracking-tight leading-tight md:leading-normal">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-light text-brand-cream tracking-tight leading-tight md:leading-normal">
               품격 있는 순간, <br />
               <span className="font-normal italic text-brand-bronze">드마리스</span>에서 완성됩니다
             </h1>
@@ -1167,8 +1180,9 @@ export default function App() {
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 text-[11px] text-gray-600">
             <div className="space-y-1">
-              <p>주소: 드마리스 타워 3층 | 대표자: 드마리스 지점 관리 위원회</p>
-              <p>사업자등록번호: 120-12-34567 | 전화번호: 010-8078-4597 | 이메일: dmarisbnc.co.kr</p>
+              <p>주소: 경기도 부천시 원미구 길주로 71 리파인빌 B/D 3층 드마리스 부천점</p>
+              <p>Tel : 032-323-3888 | Fax : 032-323-3888</p>
+              <p>사업자등록번호 : 793-81-03151 | 이메일 : ross604@naver.com</p>
             </div>
             
             <div className="text-left md:text-right space-y-1">
