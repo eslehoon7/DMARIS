@@ -31,6 +31,7 @@ export interface GalleryItem {
   id: string;
   title: string;
   category: 'WEDDING' | 'BIRTHDAY' | 'LONGEVITY' | 'CORPORATE' | 'CATERING' | 'BUFFET';
+  subCategory?: string;
   date: string;
   imageUrl: string;
 }

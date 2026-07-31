@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Heart, Gift, Sparkles, Briefcase, Coffee, Check, ArrowRight, Upload, Trash2, Eye, Image as ImageIcon, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { GalleryItem } from '../types';
+import { GlowCard } from './ui/spotlight-card';
 
 interface ServicePageProps {
   activeTab: number;
@@ -354,6 +355,7 @@ export default function ServicePage({
       .filter(item => item.category === catCode)
       .filter(item => {
         if (activeSubCategory === "전체") return true;
+        if (item.subCategory === activeSubCategory) return true;
         const titleLower = item.title.toLowerCase();
         const subLower = activeSubCategory.toLowerCase();
         if (titleLower.includes(subLower)) return true;
@@ -370,12 +372,27 @@ export default function ServicePage({
     return [...userUploaded, ...presetImages].slice(0, 12);
   }, [activeTab, activeSubCategory, galleryItems]);
 
+  const subCategoryLookup = React.useMemo(() => {
+    const map = new Map<string, string>();
+    (galleryItems || []).forEach(item => {
+      if (item.imageUrl && item.subCategory) {
+        map.set(item.imageUrl, item.subCategory);
+      }
+    });
+    return map;
+  }, [galleryItems]);
+
   return (
     <div className="w-full bg-[#FAF8F5] text-[#2C2520] flex flex-col font-sans">
       
       {/* Top Services Navigation Menu - Centered Container */}
       <div className="max-w-7xl w-full mx-auto px-6 pt-8 md:pt-12">
-        <div className="w-full flex flex-col items-center justify-center gap-4 border-b border-[#EFEBE4] pb-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full flex flex-col items-center justify-center gap-4 border-b border-[#EFEBE4] pb-6"
+        >
           <div className="text-center space-y-1">
             <span className="font-mono text-[9px] tracking-[0.2em] text-[#A68A70] uppercase font-bold">
               Premium Banquet & Services
@@ -390,24 +407,31 @@ export default function ServicePage({
             {serviceDetails.map((service, idx) => {
               const isSelected = activeTab === idx;
               return (
-                <button
+                <motion.button
                   key={service.title}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => setActiveTab(idx)}
                   className={`py-2 px-4.5 sm:py-2.5 sm:px-6 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 cursor-pointer shadow-sm border ${
                     isSelected
-                      ? 'bg-[#A68A70] border-[#A68A70] text-white font-semibold scale-[1.02] shadow-md'
+                      ? 'bg-[#A68A70] border-[#A68A70] text-white font-semibold shadow-md'
                       : 'bg-white border-[#EFEBE4] text-neutral-500 hover:text-[#A68A70] hover:border-[#A68A70]/40'
                   }`}
                 >
                   <span>{service.korTitle}</span>
-                </button>
+                </motion.button>
               );
             })}
           </div>
 
           {/* Elegant Subcategory Filter Tabs (Dynamic) */}
           {viewMode === 'gallery' && (
-            <div className="flex flex-col items-center justify-center mt-5 pt-3 border-t border-[#EFEBE4]/60 w-full max-w-2xl mx-auto animate-fade-in">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="flex flex-col items-center justify-center mt-5 pt-3 border-t border-[#EFEBE4]/60 w-full max-w-2xl mx-auto"
+            >
               <div className="flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1.5 mt-1">
                 {(subCategoriesConfig[activeTab] || ["전체"]).map((subName, subIdx) => {
                   const isSubSelected = activeSubCategory === subName;
@@ -428,10 +452,10 @@ export default function ServicePage({
                   );
                 })}
               </div>
-            </div>
+            </motion.div>
           )}
 
-        </div>
+        </motion.div>
       </div>
 
       {viewMode === 'gallery' ? (
@@ -457,50 +481,60 @@ export default function ServicePage({
                 className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 md:gap-2 lg:gap-2"
               >
                 {images.map((imgUrl, imgIdx) => {
-                  const subCategoryName = (() => {
+                  const uploadedSub = subCategoryLookup.get(imgUrl);
+                  let subCategoryName = uploadedSub || "";
+                  if (!subCategoryName) {
                     const catData = subCategoryImages[activeTab];
                     if (catData) {
-                      const found = Object.entries(catData).find(([_, list]) => list.includes(imgUrl));
-                      if (found) return found[0];
+                      for (const [subName, list] of Object.entries(catData)) {
+                        if (list.includes(imgUrl)) {
+                          subCategoryName = subName;
+                          break;
+                        }
+                      }
                     }
+                  }
+                  if (!subCategoryName) {
                     const subList = subCategoriesConfig[activeTab]?.filter(name => name !== "전체") || [];
                     if (subList.length > 0) {
-                      return subList[imgIdx % subList.length];
+                      subCategoryName = subList[imgIdx % subList.length];
                     }
-                    return "";
-                  })();
+                  }
 
                   return (
-                    <div
+                    <GlowCard
                       key={activeTab + "-gallery-" + imgIdx}
+                      glowColor="bronze"
                       onClick={() => setLightboxImage(imgUrl)}
-                      className="group relative aspect-[4/3] w-full overflow-hidden bg-neutral-100 border border-neutral-200/40 shadow-sm cursor-zoom-in transition-all duration-300 rounded-sm"
+                      className="group relative aspect-[4/3] w-full border border-neutral-200/40 shadow-sm cursor-pointer transition-transform duration-200 hover:scale-[1.015] rounded-lg overflow-hidden bg-neutral-100"
                     >
                       <img
                         src={imgUrl}
                         alt={`${currentService.korTitle} 현장 연출 사진`}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03] select-none pointer-events-none"
+                        className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105 select-none pointer-events-none"
+                        loading="lazy"
+                        decoding="async"
                         referrerPolicy="no-referrer"
                         onError={(e) => {
                           e.currentTarget.src = categoryFallbacks[activeTab] || DEFAULT_FALLBACK_IMAGE;
                         }}
                       />
-                      {/* Black gradient rising from bottom on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none" />
+                      {/* Black gradient rising instantly on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-150 ease-out pointer-events-none z-10" />
                       
-                      {/* Elegant subcategory text emerging on hover (Center aligned, slightly raised, premium typography with Gold/White pairings) */}
+                      {/* Subcategory title text emerging instantly on hover */}
                       {subCategoryName && (
-                        <div className="absolute inset-0 p-4 sm:p-5 pb-10 sm:pb-12 flex flex-col justify-end items-center text-center translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
-                          <span className="font-serif text-[11px] sm:text-xs tracking-[0.25em] text-[#C5A880] uppercase font-semibold">
+                        <div className="absolute inset-0 p-3 sm:p-4 pb-4 flex flex-col justify-end items-center text-center opacity-0 group-hover:opacity-100 transition-all duration-150 ease-out group-hover:translate-y-0 translate-y-1 pointer-events-none z-20">
+                          <span className="font-serif text-[10px] sm:text-[11px] tracking-[0.2em] text-[#D8C2A0] uppercase font-semibold">
                             {currentService.korTitle}
                           </span>
-                          <div className="w-6 h-[1px] bg-[#C5A880]/40 my-2" />
-                          <span className="font-sans text-sm sm:text-base md:text-[17px] font-semibold text-white tracking-wide leading-tight drop-shadow-sm select-none">
+                          <div className="w-5 h-[1px] bg-[#C5A880]/50 my-1" />
+                          <span className="font-sans text-xs sm:text-sm md:text-base font-semibold text-white tracking-wide leading-tight drop-shadow-md select-none">
                             {subCategoryName}
                           </span>
                         </div>
                       )}
-                    </div>
+                    </GlowCard>
                   );
                 })}
               </motion.div>
@@ -680,9 +714,14 @@ export default function ServicePage({
                 {/* Simple Feature Cards Layout */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {currentService.features.map((feature, fIdx) => (
-                    <div
+                    <motion.div
                       key={fIdx}
-                      className="p-5 rounded bg-white border border-[#EFEBE4] shadow-sm flex gap-4 hover:border-[#A68A70]/40 transition-colors"
+                      initial={{ opacity: 0, y: 15 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: fIdx * 0.08 }}
+                      whileHover={{ y: -3, borderColor: 'rgba(166, 138, 112, 0.4)' }}
+                      className="p-5 rounded bg-white border border-[#EFEBE4] shadow-sm flex gap-4 transition-colors"
                     >
                       <div className="w-5 h-5 rounded-full bg-[#FCFAF7] border border-[#EFEBE4] flex items-center justify-center text-[#A68A70] shrink-0 mt-0.5">
                         <Check size={10} className="stroke-[3px]" />
@@ -704,7 +743,7 @@ export default function ServicePage({
                           )}
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>

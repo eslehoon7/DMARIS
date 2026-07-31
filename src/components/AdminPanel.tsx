@@ -26,6 +26,40 @@ interface AdminPanelProps {
   onClose: () => void;
 }
 
+const SUB_CATEGORIES_BY_MAIN: Record<string, { label: string; value: string }[]> = {
+  WEDDING: [
+    { label: '교회 (교회/성당 웨딩)', value: '교회' },
+    { label: '야외 (야외/가든 웨딩)', value: '야외' },
+    { label: '스몰 (스몰/하우스 웨딩)', value: '스몰' },
+    { label: '고급웨딩홀 (프리미엄 웨딩홀)', value: '고급웨딩홀' }
+  ],
+  BIRTHDAY: [
+    { label: '전통돌상 (전통 스타일 돌상)', value: '전통돌상' },
+    { label: '현대돌상 (모던 스타일 돌상)', value: '현대돌상' },
+    { label: '패키지연출 (스페셜 패키지)', value: '패키지연출' }
+  ],
+  LONGEVITY: [
+    { label: '전통생신상 (전통 헌수 상차림)', value: '전통생신상' },
+    { label: '현대생신상 (모던 생신 상차림)', value: '현대생신상' },
+    { label: '직계가족예식 (소규모 직계 모임)', value: '직계가족예식' }
+  ],
+  CORPORATE: [
+    { label: '세미나·포럼 (학술/기업 세미나)', value: '세미나·포럼' },
+    { label: '사은회·시상식 (공식 시상식)', value: '사은회·시상식' },
+    { label: '연말파티 (송년/신년회 파티)', value: '연말파티' }
+  ],
+  CATERING: [
+    { label: '핑거푸드 (리셉션 핑거푸드)', value: '핑거푸드' },
+    { label: '럭셔리뷔페 (프리미엄 출장 뷔페)', value: '럭셔리뷔페' },
+    { label: '홈파티박스 (가정/소규모 파티)', value: '홈파티박스' }
+  ],
+  BUFFET: [
+    { label: '출장뷔페 (대형 연회 출장뷔페)', value: '출장뷔페' },
+    { label: '뷔페전경 (매장 전체 인테리어)', value: '뷔페전경' },
+    { label: '푸드코너 (라이브 푸드 스테이션)', value: '푸드코너' }
+  ]
+};
+
 export default function AdminPanel({
   reservations,
   menuItems,
@@ -63,12 +97,53 @@ export default function AdminPanel({
 
   const [galleryTitle, setGalleryTitle] = useState('');
   const [galleryCat, setGalleryCat] = useState<'WEDDING' | 'BIRTHDAY' | 'LONGEVITY' | 'CORPORATE' | 'CATERING' | 'BUFFET'>('WEDDING');
+  const [gallerySubCat, setGallerySubCat] = useState<string>('교회');
   const [galleryDate, setGalleryDate] = useState('2026.07');
   const [galleryImage, setGalleryImage] = useState('');
   const [galleryFile, setGalleryFile] = useState<File | null>(null);
 
+  const handleGalleryCatChange = (newCat: 'WEDDING' | 'BIRTHDAY' | 'LONGEVITY' | 'CORPORATE' | 'CATERING' | 'BUFFET') => {
+    setGalleryCat(newCat);
+    const subs = SUB_CATEGORIES_BY_MAIN[newCat];
+    if (subs && subs.length > 0) {
+      setGallerySubCat(subs[0].value);
+    } else {
+      setGallerySubCat('');
+    }
+  };
+
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
+
+  // Gallery Edit Modal State
+  const [editingGalleryItem, setEditingGalleryItem] = useState<GalleryItem | null>(null);
+  const [editGalleryTitle, setEditGalleryTitle] = useState('');
+  const [editGalleryCat, setEditGalleryCat] = useState<'WEDDING' | 'BIRTHDAY' | 'LONGEVITY' | 'CORPORATE' | 'CATERING' | 'BUFFET'>('WEDDING');
+  const [editGallerySubCat, setEditGallerySubCat] = useState<string>('');
+  const [editGalleryDate, setEditGalleryDate] = useState('2026.07');
+  const [editGalleryImage, setEditGalleryImage] = useState('');
+  const [editGalleryFile, setEditGalleryFile] = useState<File | null>(null);
+  const [isEditUploading, setIsEditUploading] = useState(false);
+
+  const handleStartEditGalleryItem = (item: GalleryItem) => {
+    setEditingGalleryItem(item);
+    setEditGalleryTitle(item.title || '');
+    setEditGalleryCat(item.category || 'WEDDING');
+    setEditGallerySubCat(item.subCategory || (SUB_CATEGORIES_BY_MAIN[item.category]?.[0]?.value || ''));
+    setEditGalleryDate(item.date || '2026.07');
+    setEditGalleryImage(item.imageUrl || '');
+    setEditGalleryFile(null);
+  };
+
+  const handleEditGalleryCatChange = (newCat: 'WEDDING' | 'BIRTHDAY' | 'LONGEVITY' | 'CORPORATE' | 'CATERING' | 'BUFFET') => {
+    setEditGalleryCat(newCat);
+    const subs = SUB_CATEGORIES_BY_MAIN[newCat];
+    if (subs && subs.length > 0) {
+      setEditGallerySubCat(subs[0].value);
+    } else {
+      setEditGallerySubCat('');
+    }
+  };
 
   // Handle Login (Image 3 Password prompt)
   const handleLogin = (e: React.FormEvent) => {
@@ -94,10 +169,74 @@ export default function AdminPanel({
     }
   };
 
+  // Helper to compress images down to under 1MB / ~500KB automatically
+  const compressImageFile = (file: File, maxDimension = 1920, quality = 0.82): Promise<File> => {
+    return new Promise((resolve) => {
+      if (file.size <= 500 * 1024 && file.type.startsWith('image/')) {
+        resolve(file);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(file);
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + "_compressed.jpg", {
+                  type: 'image/jpeg',
+                  lastModified: Date.now()
+                });
+                resolve(compressedFile);
+              } else {
+                resolve(file);
+              }
+            },
+            'image/jpeg',
+            quality
+          );
+        };
+        img.onerror = () => resolve(file);
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
+    });
+  };
+
   // Image File Upload Helper
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>, target: 'menu' | 'gallery') => {
-    const file = e.target.files?.[0];
-    if (file) {
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>, target: 'menu' | 'gallery') => {
+    const rawFile = e.target.files?.[0];
+    if (rawFile) {
+      // Compress automatically if large
+      const file = await compressImageFile(rawFile);
+
       if (target === 'menu') {
         setMenuFile(file);
       } else {
@@ -269,6 +408,7 @@ export default function AdminPanel({
         id: 'g-' + Date.now(),
         title: galleryTitle,
         category: galleryCat,
+        subCategory: gallerySubCat,
         date: galleryDate || '2026.07',
         imageUrl: finalImage
       };
@@ -295,6 +435,57 @@ export default function AdminPanel({
       type: 'gallery',
       message: '해당 이미지를 갤러리에서 삭제하시겠습니까?'
     });
+  };
+
+  // Save Edited Gallery Item
+  const handleSaveEditGalleryItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingGalleryItem) return;
+
+    if (!editGalleryTitle.trim()) {
+      alert('행사 스냅 제목을 입력해 주세요.');
+      return;
+    }
+
+    setIsEditUploading(true);
+    try {
+      let finalImage = editGalleryImage;
+
+      if (editGalleryFile) {
+        const storageRef = ref(storage, `gallery/edit_${Date.now()}_${editGalleryFile.name}`);
+        await uploadBytes(storageRef, editGalleryFile);
+        finalImage = await getDownloadURL(storageRef);
+      }
+
+      if (!finalImage) {
+        alert('이미지 URL 또는 이미지 파일을 선택해 주세요.');
+        setIsEditUploading(false);
+        return;
+      }
+
+      const updatedList = galleryItems.map(item => {
+        if (item.id === editingGalleryItem.id) {
+          return {
+            ...item,
+            title: editGalleryTitle,
+            category: editGalleryCat,
+            subCategory: editGallerySubCat,
+            date: editGalleryDate || '2026.07',
+            imageUrl: finalImage
+          };
+        }
+        return item;
+      });
+
+      onUpdateGalleryItems(updatedList);
+      setEditingGalleryItem(null);
+      alert('갤러리 사진 정보가 성공적으로 수정되었습니다!');
+    } catch (error) {
+      console.error("Gallery edit error:", error);
+      alert('수정 중 오류가 발생했습니다: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsEditUploading(false);
+    }
   };
 
   // Login view (matching image 3)
@@ -826,18 +1017,39 @@ export default function AdminPanel({
 
                   {/* Category */}
                   <div className="space-y-1.5">
-                    <label className="text-gray-400 font-medium">해당 행사 분류 카테고리</label>
+                    <label className="text-gray-400 font-medium">해당 행사 메인 카테고리</label>
                     <select
                       value={galleryCat}
-                      onChange={(e) => setGalleryCat(e.target.value as any)}
+                      onChange={(e) => handleGalleryCatChange(e.target.value as any)}
                       className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-brand-cream focus:outline-none focus:border-brand-bronze transition"
                     >
                       <option value="WEDDING">💍 웨딩 (WEDDING)</option>
                       <option value="BIRTHDAY">👶 돌잔치 (FIRST BIRTHDAY)</option>
-                      <option value="LONGEVITY">💐 장수연 (LONGEVITY)</option>
+                      <option value="LONGEVITY">💐 칠순·팔순 / 장수연 (LONGEVITY)</option>
                       <option value="CORPORATE">🏢 기업행사 (CORPORATE)</option>
                       <option value="CATERING">🍽️ 케이터링 (CATERING)</option>
-                      <option value="BUFFET">🍱 스페셜 뷔페전경 (BUFFET)</option>
+                      <option value="BUFFET">🍱 출장뷔페 / 스페셜 뷔페전경 (BUFFET)</option>
+                    </select>
+                  </div>
+
+                  {/* SubCategory */}
+                  <div className="space-y-1.5">
+                    <label className="text-gray-400 font-medium flex items-center justify-between">
+                      <span>소주제 (서브 카테고리) 설정</span>
+                      <span className="text-[10px] text-brand-bronze font-mono">
+                        {gallerySubCat ? `선택: ${gallerySubCat}` : ''}
+                      </span>
+                    </label>
+                    <select
+                      value={gallerySubCat}
+                      onChange={(e) => setGallerySubCat(e.target.value)}
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-brand-cream focus:outline-none focus:border-brand-bronze transition"
+                    >
+                      {(SUB_CATEGORIES_BY_MAIN[galleryCat] || []).map((sub) => (
+                        <option key={sub.value} value={sub.value}>
+                          {sub.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -875,11 +1087,14 @@ export default function AdminPanel({
                         onChange={(e) => handleImageFileChange(e, 'gallery')}
                         className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                       />
-                      <div className="text-center">
+                      <div className="text-center space-y-1">
                         <ImageIcon size={18} className="mx-auto text-brand-bronze mb-1" />
-                        <span className="text-[10px] text-neutral-400">
+                        <span className="text-[11px] text-neutral-300 font-medium block">
                           {galleryImage.startsWith('data:') ? '✅ 로컬 이미지 장착 완료' : '컴퓨터 파일 탐색기에서 이미지 선택하기'}
                         </span>
+                        <p className="text-[11px] text-amber-400/90 font-medium leading-snug">
+                          ※ 500KB 이내의 사진을 업로드해야 합니다. (로딩 속도 최적화)
+                        </p>
                       </div>
                     </div>
 
@@ -932,18 +1147,30 @@ export default function AdminPanel({
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {galleryItems.map(item => (
                     <div key={item.id} className="relative aspect-square rounded-lg overflow-hidden border border-neutral-900 group">
-                      <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" loading="lazy" decoding="async" referrerPolicy="no-referrer" />
                       
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end space-y-1">
-                        <p className="text-[10px] text-brand-bronze font-mono">{item.date} | {item.category}</p>
+                        <p className="text-[10px] text-brand-bronze font-mono">
+                          {item.date} | {item.category} {item.subCategory ? `(${item.subCategory})` : ''}
+                        </p>
                         <p className="text-[10px] text-white font-sans font-medium line-clamp-2 leading-snug">{item.title}</p>
                         
-                        <button
-                          onClick={() => handleDeleteGalleryItem(item.id)}
-                          className="mt-2 w-full bg-red-950/80 hover:bg-red-900 border border-red-900 text-red-200 text-[10px] py-1 rounded transition cursor-pointer"
-                        >
-                          삭제하기
-                        </button>
+                        <div className="mt-2 grid grid-cols-2 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditGalleryItem(item)}
+                            className="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-amber-300 text-[10px] py-1 rounded transition cursor-pointer flex items-center justify-center gap-1 font-medium"
+                          >
+                            수정하기
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteGalleryItem(item.id)}
+                            className="bg-red-950/80 hover:bg-red-900 border border-red-900 text-red-200 text-[10px] py-1 rounded transition cursor-pointer flex items-center justify-center gap-1"
+                          >
+                            삭제하기
+                          </button>
+                        </div>
                       </div>
 
                       {/* Small floating tag */}
@@ -955,6 +1182,147 @@ export default function AdminPanel({
                 </div>
               </div>
 
+            </div>
+          )}
+
+          {/* Gallery Edit Modal Overlay */}
+          {editingGalleryItem && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="w-full max-w-lg bg-neutral-950 border border-neutral-800 rounded-2xl p-6 space-y-5 text-left text-xs shadow-2xl">
+                <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
+                  <div>
+                    <h3 className="text-base font-serif text-brand-cream font-medium">갤러리 스냅 정보 수정</h3>
+                    <p className="text-[11px] text-gray-400 mt-0.5">선택한 행사 스냅의 제목, 메인/서브 카테고리, 날짜 및 이미지를 변경합니다.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditingGalleryItem(null)}
+                    className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-neutral-900 transition cursor-pointer"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveEditGalleryItem} className="space-y-4">
+                  {/* Title */}
+                  <div className="space-y-1.5">
+                    <label className="text-gray-400 font-medium">행사 스냅 제목</label>
+                    <input
+                      type="text"
+                      value={editGalleryTitle}
+                      onChange={(e) => setEditGalleryTitle(e.target.value)}
+                      placeholder="예: 영락교회 본당 단독 가든 세팅"
+                      required
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-brand-cream focus:outline-none focus:border-brand-bronze transition"
+                    />
+                  </div>
+
+                  {/* Category & SubCategory */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-gray-400 font-medium">메인 카테고리</label>
+                      <select
+                        value={editGalleryCat}
+                        onChange={(e) => handleEditGalleryCatChange(e.target.value as any)}
+                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-brand-cream focus:outline-none focus:border-brand-bronze transition"
+                      >
+                        <option value="WEDDING">💍 웨딩 (WEDDING)</option>
+                        <option value="BIRTHDAY">🎂 돌잔치 (BIRTHDAY)</option>
+                        <option value="LONGEVITY">💐 칠순·팔순 / 장수연 (LONGEVITY)</option>
+                        <option value="CORPORATE">🏢 기업행사 (CORPORATE)</option>
+                        <option value="CATERING">🍽️ 케이터링 (CATERING)</option>
+                        <option value="BUFFET">🍱 출장뷔페 / 뷔페전경 (BUFFET)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-gray-400 font-medium">소주제 (서브 카테고리)</label>
+                      <select
+                        value={editGallerySubCat}
+                        onChange={(e) => setEditGallerySubCat(e.target.value)}
+                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-brand-cream focus:outline-none focus:border-brand-bronze transition"
+                      >
+                        {(SUB_CATEGORIES_BY_MAIN[editGalleryCat] || []).map((sub) => (
+                          <option key={sub.value} value={sub.value}>
+                            {sub.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Date */}
+                  <div className="space-y-1.5">
+                    <label className="text-gray-400 font-medium">행사 연월 (표기용)</label>
+                    <input
+                      type="text"
+                      value={editGalleryDate}
+                      onChange={(e) => setEditGalleryDate(e.target.value)}
+                      placeholder="2026.07"
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-brand-cream focus:outline-none focus:border-brand-bronze transition font-mono"
+                    />
+                  </div>
+
+                  {/* Image upload / URL */}
+                  <div className="space-y-1.5">
+                    <label className="text-gray-400 font-medium">이미지 변경 (선택사항)</label>
+                    <div className="space-y-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            const compressed = await compressImageFile(e.target.files[0]);
+                            setEditGalleryFile(compressed);
+                            setEditGalleryImage(URL.createObjectURL(compressed));
+                          }
+                        }}
+                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-gray-300 text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-neutral-800 file:text-brand-cream file:cursor-pointer"
+                      />
+                      <p className="text-[11px] text-amber-400/90 font-medium">
+                        ※ 500KB 이내의 사진을 업로드해야 합니다. (로딩 속도 최적화)
+                      </p>
+                      <input
+                        type="url"
+                        value={editGalleryImage}
+                        onChange={(e) => setEditGalleryImage(e.target.value)}
+                        placeholder="https://..."
+                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-gray-300 text-xs focus:outline-none focus:border-brand-bronze font-mono"
+                      />
+                    </div>
+                    {editGalleryImage && (
+                      <div className="mt-2 relative aspect-[16/9] max-h-36 rounded-lg overflow-hidden border border-neutral-800 bg-black">
+                        <img src={editGalleryImage} alt="수정 이미지 미리보기" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-900">
+                    <button
+                      type="button"
+                      onClick={() => setEditingGalleryItem(null)}
+                      className="px-4 py-2.5 rounded-lg border border-neutral-800 text-gray-300 hover:bg-neutral-900 transition cursor-pointer font-medium"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isEditUploading}
+                      className="px-5 py-2.5 rounded-lg bg-brand-bronze hover:bg-brand-bronze-dark text-white font-semibold transition cursor-pointer flex items-center gap-2"
+                    >
+                      {isEditUploading ? (
+                        <>
+                          <span className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white"></span>
+                          <span>저장 중...</span>
+                        </>
+                      ) : (
+                        <span>수정 사항 저장하기</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
 

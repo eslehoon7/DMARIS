@@ -41,10 +41,10 @@ service cloud.firestore {
 
     function isValidGalleryItem(data) {
       return data.keys().hasAll(['id', 'title', 'category', 'date', 'imageUrl'])
-        && data.keys().size() == 5
         && data.id is string && data.id.size() <= 128
         && data.title is string && data.title.size() <= 200
         && data.category is string && data.category in ['WEDDING', 'BIRTHDAY', 'LONGEVITY', 'CORPORATE', 'CATERING', 'BUFFET']
+        && (!('subCategory' in data) || (data.subCategory is string && data.subCategory.size() <= 200))
         && data.date is string && data.date.size() <= 20
         && data.imageUrl is string && data.imageUrl.size() <= 2000;
     }

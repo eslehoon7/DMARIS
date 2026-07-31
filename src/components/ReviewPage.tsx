@@ -170,7 +170,12 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
       <div className="max-w-7xl mx-auto space-y-12 animate-fade-in">
         
         {/* Board Header Section */}
-        <div className="text-center space-y-4 pt-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 25 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="text-center space-y-4 pt-8"
+        >
           <span className="font-mono text-xs tracking-[0.3em] text-[#C5A880] uppercase flex items-center justify-center gap-1.5">
             <Sparkles size={12} className="text-[#C5A880]" />
             DMARIS TRUST REVIEWS
@@ -184,29 +189,36 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
           </p>
           
           <div className="pt-4 flex flex-wrap justify-center items-center gap-4 text-xs text-gray-400">
-            <div className="flex items-center gap-2 bg-neutral-900/60 px-4 py-2 rounded-full border border-neutral-800/40">
+            <motion.div whileHover={{ y: -2 }} className="flex items-center gap-2 bg-neutral-900/60 px-4 py-2 rounded-full border border-neutral-800/40">
               <MessageSquare size={13} className="text-[#C5A880]" />
               <span>전체 후기 <strong className="text-[#C5A880] font-semibold">{totalReviewsCount}건</strong></span>
-            </div>
-            <div className="flex items-center gap-2 bg-[#C5A880]/10 px-4 py-2 rounded-full border border-[#C5A880]/20">
+            </motion.div>
+            <motion.div whileHover={{ y: -2 }} className="flex items-center gap-2 bg-[#C5A880]/10 px-4 py-2 rounded-full border border-[#C5A880]/20">
               <ShieldCheck size={13} className="text-[#C5A880]" />
               <span className="text-brand-cream">실예약 안심 인증 <strong className="text-[#C5A880] font-bold">{verifiedCount}건</strong></span>
-            </div>
-            <div className="flex items-center gap-2 bg-neutral-900/60 px-4 py-2 rounded-full border border-neutral-800/40">
+            </motion.div>
+            <motion.div whileHover={{ y: -2 }} className="flex items-center gap-2 bg-neutral-900/60 px-4 py-2 rounded-full border border-neutral-800/40">
               <Star size={13} className="text-amber-400 fill-amber-400" />
               <span>평균 만족도 <strong className="text-amber-400 font-semibold">{averageRating} / 5.00</strong></span>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Action Controls & Filters */}
-        <div className="flex flex-col xl:flex-row gap-5 justify-between items-stretch xl:items-center bg-neutral-950 p-4 sm:p-6 rounded-xl border border-neutral-900/80">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex flex-col xl:flex-row gap-5 justify-between items-stretch xl:items-center bg-neutral-950 p-4 sm:p-6 rounded-xl border border-neutral-900/80"
+        >
           
           {/* Category Tabs */}
           <div className="flex flex-wrap gap-1.5 overflow-x-auto pb-2 xl:pb-0 scrollbar-none">
             {CATEGORIES.map((cat) => (
-              <button
+              <motion.button
                 key={cat}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-3.5 py-2 text-[11px] sm:text-xs font-medium tracking-wider rounded-sm transition cursor-pointer whitespace-nowrap ${
                   selectedCategory === cat
@@ -215,7 +227,7 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
                 }`}
               >
                 {cat}
-              </button>
+              </motion.button>
             ))}
           </div>
 
@@ -235,15 +247,17 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
             </div>
 
             {/* Write Button */}
-            <button
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => setIsWriteOpen(true)}
               className="bg-brand-bronze hover:bg-[#b0936e] text-white text-xs font-semibold tracking-wider px-5 py-2.5 rounded-sm inline-flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-brand-bronze/10 shrink-0"
             >
               <Plus size={15} />
               리뷰 작성하기
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -252,10 +266,11 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
               filteredReviews.map((rev, idx) => (
                 <motion.div
                   key={rev.id}
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3, delay: Math.min(idx * 0.05, 0.4) }}
+                  transition={{ duration: 0.4, delay: Math.min(idx * 0.05, 0.4), ease: [0.22, 1, 0.36, 1] }}
+                  whileHover={{ y: -5 }}
                   className={`bg-neutral-950 p-6 rounded-xl border flex flex-col justify-between hover:border-[#C5A880]/30 transition-all duration-300 shadow-xl group relative overflow-hidden ${
                     rev.isVerified 
                       ? 'border-neutral-800/80 ring-1 ring-[#C5A880]/10 bg-gradient-to-b from-neutral-950 to-[#0e0d0b]' 

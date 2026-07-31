@@ -84,7 +84,13 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           
           {/* Left Description Column */}
-          <div className="lg:col-span-4 space-y-8">
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="lg:col-span-4 space-y-8"
+          >
             <div className="space-y-4">
               <span className="font-mono text-xs tracking-widest text-brand-bronze uppercase">05 / RESERVE</span>
               <h2 className="text-4xl md:text-5xl font-serif leading-tight font-light text-brand-cream tracking-tight">
@@ -124,10 +130,16 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right Form Column */}
-          <div className="lg:col-span-8 bg-neutral-900/40 p-8 md:p-10 rounded-2xl border border-neutral-800/80 backdrop-blur-md">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="lg:col-span-8 bg-neutral-900/40 p-8 md:p-10 rounded-2xl border border-neutral-800/80 backdrop-blur-md"
+          >
             
             <AnimatePresence mode="wait">
               {isSuccess && (
@@ -294,7 +306,7 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
               </div>
 
             </form>
-          </div>
+          </motion.div>
 
         </div>
       </div>

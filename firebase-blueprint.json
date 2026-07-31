@@ -42,6 +42,7 @@
         "id": { "type": "string" },
         "title": { "type": "string" },
         "category": { "type": "string", "enum": ["WEDDING", "BIRTHDAY", "LONGEVITY", "CORPORATE", "CATERING", "BUFFET"] },
+        "subCategory": { "type": "string" },
         "date": { "type": "string" },
         "imageUrl": { "type": "string" }
       },

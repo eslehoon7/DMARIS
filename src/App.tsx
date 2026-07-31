@@ -17,6 +17,7 @@ import BookingForm from './components/BookingForm';
 import AdminPanel from './components/AdminPanel';
 import ServicePage from './components/ServicePage';
 import ReviewPage from './components/ReviewPage';
+import { GlowCard } from './components/ui/spotlight-card';
 import { 
   Menu, 
   X, 
@@ -232,17 +233,12 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Sync updaters to handle Firebase writes
+  // Sync updaters to handle Firebase writes with optimistic UI updates & parallel async promises
   const handleUpdateReservations = async (newList: Reservation[]) => {
+    setReservations(newList);
     try {
-      const oldIds = new Set(reservations.map(r => r.id));
       const newIds = new Set(newList.map(r => r.id));
-      
       const toDelete = reservations.filter(r => !newIds.has(r.id));
-      for (const item of toDelete) {
-        await deleteDoc(doc(db, "reservations", item.id));
-      }
-
       const oldMap = new Map(reservations.map(r => [r.id, r]));
       const toWrite = newList.filter(item => {
         const oldItem = oldMap.get(item.id);
@@ -250,25 +246,24 @@ export default function App() {
         return JSON.stringify(item) !== JSON.stringify(oldItem);
       });
 
-      for (const item of toWrite) {
-        await setDoc(doc(db, "reservations", item.id), item);
+      const promises: Promise<void>[] = [];
+      for (const item of toDelete) {
+        promises.push(deleteDoc(doc(db, "reservations", item.id)));
       }
+      for (const item of toWrite) {
+        promises.push(setDoc(doc(db, "reservations", item.id), item));
+      }
+      await Promise.all(promises);
     } catch (e) {
       console.error("Sync reservations error:", e);
     }
-    setReservations(newList);
   };
 
   const handleUpdateMenuItems = async (newList: MenuItem[]) => {
+    setMenuItems(newList);
     try {
-      const oldIds = new Set(menuItems.map(r => r.id));
       const newIds = new Set(newList.map(r => r.id));
-
       const toDelete = menuItems.filter(r => !newIds.has(r.id));
-      for (const item of toDelete) {
-        await deleteDoc(doc(db, "menu_items", item.id));
-      }
-
       const oldMap = new Map(menuItems.map(r => [r.id, r]));
       const toWrite = newList.filter(item => {
         const oldItem = oldMap.get(item.id);
@@ -276,25 +271,24 @@ export default function App() {
         return JSON.stringify(item) !== JSON.stringify(oldItem);
       });
 
-      for (const item of toWrite) {
-        await setDoc(doc(db, "menu_items", item.id), item);
+      const promises: Promise<void>[] = [];
+      for (const item of toDelete) {
+        promises.push(deleteDoc(doc(db, "menu_items", item.id)));
       }
+      for (const item of toWrite) {
+        promises.push(setDoc(doc(db, "menu_items", item.id), item));
+      }
+      await Promise.all(promises);
     } catch (e) {
       console.error("Sync menu_items error:", e);
     }
-    setMenuItems(newList);
   };
 
   const handleUpdateGalleryItems = async (newList: GalleryItem[]) => {
+    setGalleryItems(newList);
     try {
-      const oldIds = new Set(galleryItems.map(r => r.id));
       const newIds = new Set(newList.map(r => r.id));
-
       const toDelete = galleryItems.filter(r => !newIds.has(r.id));
-      for (const item of toDelete) {
-        await deleteDoc(doc(db, "gallery_items", item.id));
-      }
-
       const oldMap = new Map(galleryItems.map(r => [r.id, r]));
       const toWrite = newList.filter(item => {
         const oldItem = oldMap.get(item.id);
@@ -302,25 +296,24 @@ export default function App() {
         return JSON.stringify(item) !== JSON.stringify(oldItem);
       });
 
-      for (const item of toWrite) {
-        await setDoc(doc(db, "gallery_items", item.id), item);
+      const promises: Promise<void>[] = [];
+      for (const item of toDelete) {
+        promises.push(deleteDoc(doc(db, "gallery_items", item.id)));
       }
+      for (const item of toWrite) {
+        promises.push(setDoc(doc(db, "gallery_items", item.id), item));
+      }
+      await Promise.all(promises);
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, "gallery_items");
     }
-    setGalleryItems(newList);
   };
 
   const handleUpdateReviews = async (newList: Review[]) => {
+    setReviews(newList);
     try {
-      const oldIds = new Set(reviews.map(r => r.id));
       const newIds = new Set(newList.map(r => r.id));
-
       const toDelete = reviews.filter(r => !newIds.has(r.id));
-      for (const item of toDelete) {
-        await deleteDoc(doc(db, "reviews", item.id));
-      }
-
       const oldMap = new Map(reviews.map(r => [r.id, r]));
       const toWrite = newList.filter(item => {
         const oldItem = oldMap.get(item.id);
@@ -328,13 +321,17 @@ export default function App() {
         return JSON.stringify(item) !== JSON.stringify(oldItem);
       });
 
-      for (const item of toWrite) {
-        await setDoc(doc(db, "reviews", item.id), item);
+      const promises: Promise<void>[] = [];
+      for (const item of toDelete) {
+        promises.push(deleteDoc(doc(db, "reviews", item.id)));
       }
+      for (const item of toWrite) {
+        promises.push(setDoc(doc(db, "reviews", item.id), item));
+      }
+      await Promise.all(promises);
     } catch (e) {
       console.error("Sync reviews error:", e);
     }
-    setReviews(newList);
   };
 
   const handleDeleteReservation = async (id: string) => {
@@ -388,6 +385,16 @@ export default function App() {
   const [activeServiceTab, setActiveServiceTab] = useState(0);
   const [activeServiceSubCategory, setActiveServiceSubCategory] = useState<string>('전체');
   const [servicePageViewMode, setServicePageViewMode] = useState<'service' | 'gallery'>('service');
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (isServicesHovered) return;
@@ -488,24 +495,31 @@ export default function App() {
     <div className="min-h-screen bg-[#0a0a0a] text-neutral-200 font-sans selection:bg-brand-bronze selection:text-white">
       
       {/* HEADER SECTION (Matching PC & Mobile layout requirements) */}
-      <header className="fixed top-0 left-0 w-full z-40 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-neutral-900/80 transition-all duration-300">
+      <header className={`fixed top-0 left-0 w-full z-40 transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-[#0a0a0a]/10 backdrop-blur-md shadow-lg' 
+          : 'bg-gradient-to-b from-black/80 via-black/30 to-transparent'
+      }`}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           
-          {/* Logo (With gold typography) */}
+          {/* Logo */}
           <button 
             onClick={() => {
               setIsServicePageOpen(false);
               setIsReviewPageOpen(false);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="text-left flex flex-col focus:outline-none cursor-pointer group"
+            className="text-left flex items-center focus:outline-none cursor-pointer group"
           >
-            <span className="text-xl md:text-2xl font-serif font-semibold tracking-wider text-brand-bronze group-hover:text-amber-400 transition-colors">
-              DMARIS
-            </span>
-            <span className="text-[8px] md:text-[9px] font-mono tracking-[0.25em] text-gray-500 uppercase -mt-1">
-              Premium Buffet
-            </span>
+            <img 
+              src={isScrolled 
+                ? "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/logo%2F%EB%A1%9C%EA%B3%A001.png?alt=media&token=37d18b43-44db-4aa6-8111-ef8c3dd8e56f"
+                : "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/logo%2F%EB%A1%9C%EA%B3%A002.png?alt=media&token=a71ef1da-c59c-4aa8-a955-ae3d24e06472"
+              } 
+              alt="D'MARIS Logo" 
+              className="h-10 md:h-12 w-auto object-contain transition-all duration-300 group-hover:opacity-90"
+              referrerPolicy="no-referrer"
+            />
           </button>
 
           {/* PC Navigation Links (Layout 2 spec) */}
@@ -740,12 +754,18 @@ export default function App() {
 
 
       {/* 01 / ABOUT DMARIS (Brand story with chef plating - Light Warm Sand bg) */}
-      <section id="brand" className="py-24 bg-brand-beige text-brand-charcoal relative">
+      <section id="brand" className="py-24 bg-brand-beige text-brand-charcoal relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             
             {/* Left Content */}
-            <div className="space-y-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              className="space-y-8"
+            >
               <div className="space-y-3">
                 <span className="font-mono text-xs tracking-widest text-brand-bronze uppercase">01 / ABOUT DMARIS</span>
                 <h2 className="text-3xl md:text-4xl font-serif leading-tight font-light tracking-tight">
@@ -771,7 +791,11 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-xs font-sans">
-                <div className="bg-white/60 p-4 rounded-lg border border-neutral-200">
+                <motion.div 
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.2 }}
+                  className="bg-white/60 p-4 rounded-lg border border-neutral-200 shadow-sm"
+                >
                   <div className="font-serif text-brand-bronze text-base font-medium mb-1">PRIVATE HALL</div>
                   <p className="text-gray-500 text-[11px] leading-relaxed">
                     <strong className="font-bold text-gray-700 block">단독 연회장</strong>
@@ -779,8 +803,12 @@ export default function App() {
                     10인 가족모임부터<br />
                     200인 대규모 행사까지
                   </p>
-                </div>
-                <div className="bg-white/60 p-4 rounded-lg border border-neutral-200">
+                </motion.div>
+                <motion.div 
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.2 }}
+                  className="bg-white/60 p-4 rounded-lg border border-neutral-200 shadow-sm"
+                >
                   <div className="font-serif text-brand-bronze text-base font-medium mb-1">LIVE DINING</div>
                   <p className="text-gray-500 text-[11px] leading-relaxed">
                     <strong className="font-bold text-gray-700 block">프리미엄 라이브 키친</strong>
@@ -788,8 +816,12 @@ export default function App() {
                     즉석에서 완성되는<br />
                     호텔급 라이브 요리
                   </p>
-                </div>
-                <div className="bg-white/60 p-4 rounded-lg border border-neutral-200">
+                </motion.div>
+                <motion.div 
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.2 }}
+                  className="bg-white/60 p-4 rounded-lg border border-neutral-200 shadow-sm"
+                >
                   <div className="font-serif text-brand-bronze text-base font-medium mb-1">EVENT SERVICE</div>
                   <p className="text-gray-500 text-[11px] leading-relaxed">
                     <strong className="font-bold text-gray-700 block">행사 전문 케어</strong>
@@ -797,31 +829,35 @@ export default function App() {
                     돌잔치·회갑연·웨딩·기업행사<br />
                     전담 매니저 진행
                   </p>
-                </div>
+                </motion.div>
               </div>
 
               <button
                 onClick={() => setIsAboutModalOpen(true)}
-                className="inline-flex items-center gap-1.5 text-xs text-brand-bronze font-semibold hover:text-brand-bronze-dark uppercase tracking-widest pt-2 cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs text-brand-bronze font-semibold hover:text-brand-bronze-dark uppercase tracking-widest pt-2 cursor-pointer group"
               >
                 <span>드마리스 스토리 더 알아보기</span>
-                <ArrowRight size={14} />
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </button>
-            </div>
+            </motion.div>
 
             {/* Right Chef Photo Plating */}
-            <div className="relative">
-              <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border border-neutral-200/40">
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              className="relative"
+            >
+              <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border border-neutral-200/40 group">
                 <img
                   src="https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80"
                   alt="Professional fine dining Chef hands plating a premium dish"
-                  className="w-full h-full object-cover hover:scale-102 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   referrerPolicy="no-referrer"
                 />
               </div>
-              
-
-            </div>
+            </motion.div>
 
           </div>
         </div>
@@ -832,7 +868,13 @@ export default function App() {
       <section id="services" className="py-24 bg-[#FCFAF7] border-t border-b border-[#F2EAE0] text-[#332C26] overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16"
+          >
             <div className="space-y-4">
               <span className="font-mono text-xs tracking-widest text-[#A68A70] uppercase">02 / OUR SERVICE</span>
               <h2 className="text-3xl md:text-4xl font-serif font-light text-[#2C2520] leading-tight">
@@ -840,62 +882,70 @@ export default function App() {
                 <span className="text-[#A68A70] font-normal">인생의 명장면들</span>
               </h2>
             </div>
-          </div>
+          </motion.div>
 
           {/* Grid of 5 luxurious cards designed precisely as image.png with separated layouts and minimal rounded corners */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {services.map((svc, idx) => {
-              const IconComp = svc.icon;
               return (
-                <div
+                <motion.div
                   key={svc.title}
-                  onClick={() => {
-                    setActiveStoryIndex(idx);
-                    setActiveServiceTab(idx);
-                    setIsServicePageOpen(true);
-                  }}
-                  className={`group bg-white rounded-sm overflow-hidden border border-[#EFEBE4] text-center shadow-[0_4px_16px_rgba(202,189,173,0.08)] hover:shadow-[0_10px_24px_rgba(202,189,173,0.18)] hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between cursor-pointer ${
-                    activeStoryIndex === idx ? 'ring-1 ring-[#A68A70] shadow-[0_10px_24px_rgba(202,189,173,0.18)]' : ''
-                  }`}
+                  initial={{ opacity: 0, y: 35 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  className="h-full"
                 >
-                  <div className="flex flex-col h-full">
-                    {/* Visual separation: Image at the top with a crisp border underneath, and absolutely minimal rounded corners */}
-                    <div className="relative aspect-[1.5] overflow-hidden border-b border-[#EFEBE4]">
-                      <img
-                        src={svc.imageUrl}
-                        alt={svc.korTitle}
-                        className={`w-full h-full object-cover transition-transform duration-500 ${
-                          svc.title === 'CATERING'
-                            ? 'scale-[1.3] group-hover:scale-[1.35] brightness-[1.06] contrast-[1.06] saturate-[1.12]'
-                            : 'group-hover:scale-102'
-                        }`}
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-
-                    {/* Text content separated with ample space below the line with a background slightly darker than the section background */}
-                    <div className="p-5 flex flex-col justify-between flex-grow bg-[#F5EFE6] group-hover:bg-[#EDE4D7] transition-colors duration-300">
-                      <div className="space-y-3.5">
-                        <div className="text-[11px] md:text-xs font-sans tracking-[0.22em] text-[#8C745C] uppercase font-normal">
-                          {svc.title}
-                        </div>
-                        <h3 className="text-base md:text-lg font-serif font-medium text-[#2C2520] tracking-tight">
-                          {svc.korTitle}
-                        </h3>
-                        <p className="text-[11px] md:text-xs text-[#857668] leading-relaxed font-sans whitespace-pre-line max-w-[200px] mx-auto min-h-[44px] flex items-center justify-center">
-                          {svc.desc}
-                        </p>
+                  <GlowCard
+                    glowColor="bronze"
+                    onClick={() => {
+                      setActiveStoryIndex(idx);
+                      setActiveServiceTab(idx);
+                      setIsServicePageOpen(true);
+                    }}
+                    className={`group bg-white rounded-xl overflow-hidden border border-[#EFEBE4] text-center shadow-[0_4px_16px_rgba(202,189,173,0.08)] hover:shadow-[0_12px_28px_rgba(202,189,173,0.22)] transition-all duration-300 flex flex-col justify-between cursor-pointer h-full ${
+                      activeStoryIndex === idx ? 'ring-2 ring-[#A68A70] shadow-[0_12px_28px_rgba(202,189,173,0.22)]' : ''
+                    }`}
+                  >
+                    <div className="flex flex-col h-full z-20 relative">
+                      {/* Visual separation: Image at the top with a crisp border underneath */}
+                      <div className="relative aspect-[1.5] overflow-hidden border-b border-[#EFEBE4]">
+                        <img
+                          src={svc.imageUrl}
+                          alt={svc.korTitle}
+                          className={`w-full h-full object-cover transition-transform duration-700 ${
+                            svc.title === 'CATERING'
+                              ? 'scale-[1.3] group-hover:scale-[1.38] brightness-[1.06] contrast-[1.06] saturate-[1.12]'
+                              : 'group-hover:scale-105'
+                          }`}
+                          referrerPolicy="no-referrer"
+                        />
                       </div>
 
-                      {/* Circular Chevron/Arrow Button */}
-                      <div className="mt-5 flex justify-center">
-                        <div className="w-8 h-8 rounded-full border border-[#DCD3C7] text-[#A68A70] flex items-center justify-center group-hover:bg-[#A68A70] group-hover:text-white group-hover:border-[#A68A70] transition-colors duration-300">
-                          <ArrowRight size={14} className="stroke-[1.5]" />
+                      {/* Text content separated with ample space */}
+                      <div className="p-5 flex flex-col justify-between flex-grow bg-[#F5EFE6] group-hover:bg-[#EDE4D7] transition-colors duration-300">
+                        <div className="space-y-3.5">
+                          <div className="text-[11px] md:text-xs font-sans tracking-[0.22em] text-[#8C745C] uppercase font-normal">
+                            {svc.title}
+                          </div>
+                          <h3 className="text-base md:text-lg font-serif font-medium text-[#2C2520] tracking-tight">
+                            {svc.korTitle}
+                          </h3>
+                          <p className="text-[11px] md:text-xs text-[#857668] leading-relaxed font-sans whitespace-pre-line max-w-[200px] mx-auto min-h-[44px] flex items-center justify-center">
+                            {svc.desc}
+                          </p>
+                        </div>
+
+                        {/* Circular Chevron/Arrow Button */}
+                        <div className="mt-5 flex justify-center">
+                          <div className="w-8 h-8 rounded-full border border-[#DCD3C7] text-[#A68A70] flex items-center justify-center group-hover:bg-[#A68A70] group-hover:text-white group-hover:border-[#A68A70] transition-colors duration-300">
+                            <ArrowRight size={14} className="stroke-[1.5]" />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  </GlowCard>
+                </motion.div>
               );
             })}
           </div>
@@ -964,19 +1014,31 @@ export default function App() {
 
 
       {/* 03 / GALLERY (Grid of images with premium tabs - Light theme) */}
-      <section id="gallery" className="py-24 bg-brand-beige text-brand-charcoal border-t border-neutral-200">
+      <section id="gallery" className="py-24 bg-brand-beige text-brand-charcoal border-t border-neutral-200 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="text-center space-y-4 mb-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="text-center space-y-4 mb-12"
+          >
             <span className="font-mono text-xs tracking-widest text-brand-bronze uppercase">03 / PHOTO GALLERY</span>
             <h2 className="text-3xl md:text-4xl font-serif text-center font-light">
               완성된 <span className="text-brand-bronze font-normal">순간들</span>
             </h2>
             <div className="w-10 h-[1px] bg-brand-bronze mx-auto mt-4" />
-          </div>
+          </motion.div>
 
           {/* Category Tabs for snaps */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-10 text-xs font-sans">
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex flex-wrap items-center justify-center gap-2 mb-10 text-xs font-sans"
+          >
             {[
               { id: 'ALL', name: '최근소식' },
               { id: 'WEDDING', name: '웨딩' },
@@ -998,40 +1060,46 @@ export default function App() {
                 {tab.name}
               </button>
             ))}
-          </div>
+          </motion.div>
 
           {/* Photo Snapshots Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             <AnimatePresence mode="popLayout">
               {filteredGallery.slice(0, 8).map((snap, idx) => (
                 <motion.div
                   key={snap.id}
                   layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                  viewport={{ once: true }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.4, delay: idx * 0.05 }}
-                  onClick={() => handleGalleryItemClick(snap.category, snap.title)}
-                  className="group relative aspect-[10/7] rounded-none overflow-hidden bg-gray-200 border border-neutral-200/60 shadow-sm cursor-pointer"
+                  transition={{ duration: 0.45, delay: idx * 0.05 }}
+                  className="w-full"
                 >
-                  <img
-                    src={snap.imageUrl}
-                    alt={snap.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    referrerPolicy="no-referrer"
-                  />
-                  {/* Glassmorphism details footer with clickable indicator */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end space-y-1 text-white">
-                    <span className="font-mono text-[9px] text-brand-bronze tracking-wider uppercase font-bold">{snap.category}</span>
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-sans font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[70%]">
-                        {snap.title}
-                      </h4>
-                      <span className="text-[10px] text-amber-400 font-sans flex items-center gap-1 hover:underline">
-                        갤러리 이동 →
-                      </span>
+                  <GlowCard
+                    glowColor="bronze"
+                    onClick={() => handleGalleryItemClick(snap.category, snap.title)}
+                    className="group relative aspect-[10/7] rounded-lg overflow-hidden bg-gray-200 border border-neutral-200/60 shadow-sm cursor-pointer w-full h-full"
+                  >
+                    <img
+                      src={snap.imageUrl}
+                      alt={snap.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      referrerPolicy="no-referrer"
+                    />
+                    {/* Glassmorphism details footer with clickable indicator */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-100 p-4 flex flex-col justify-end space-y-1 text-white z-20">
+                      <span className="font-mono text-[9px] text-brand-bronze tracking-wider uppercase font-bold">{snap.category}</span>
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-sans font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[70%]">
+                          {snap.title}
+                        </h4>
+                        <span className="text-[10px] text-amber-400 font-sans flex items-center gap-1 hover:underline">
+                          갤러리 이동 →
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  </GlowCard>
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -1054,7 +1122,13 @@ export default function App() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
             {/* Left large core review block (Image 1 Section 04 layout spec) */}
-            <div className="lg:col-span-5 space-y-6">
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              className="lg:col-span-5 space-y-6"
+            >
               <span className="font-mono text-xs tracking-widest text-brand-bronze uppercase">04 / COMMUNITY</span>
               
               <div className="text-brand-bronze">
@@ -1088,12 +1162,20 @@ export default function App() {
                   리뷰게시판 더보기 <ChevronRight size={13} />
                 </button>
               </div>
-            </div>
+            </motion.div>
 
             {/* Right reviews grid of 4 cards (Image 1 후기 block spec) */}
             <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {reviews.slice(0, 4).map(rev => (
-                <div key={rev.id} className="bg-neutral-950 p-6 rounded-xl border border-neutral-800/60 space-y-4 hover:border-neutral-700 transition">
+              {reviews.slice(0, 4).map((rev, idx) => (
+                <motion.div 
+                  key={rev.id} 
+                  initial={{ opacity: 0, y: 25 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  whileHover={{ y: -4 }}
+                  className="bg-neutral-950 p-6 rounded-xl border border-neutral-800/60 space-y-4 hover:border-neutral-700 transition-colors shadow-lg"
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-xs text-brand-cream font-medium">{rev.author} 고객님</span>
@@ -1111,7 +1193,7 @@ export default function App() {
                       <Star key={idx} size={10} className={idx < rev.rating ? "fill-current" : "text-neutral-800"} />
                     ))}
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
 
@@ -1125,9 +1207,14 @@ export default function App() {
 
 
       {/* OPERATING INFO BLOCK SECTION */}
-      <section className="py-12 bg-neutral-950 border-t border-neutral-900/60 text-xs text-gray-400 font-sans">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
-          
+      <section className="py-12 bg-neutral-950 border-t border-neutral-900/60 text-xs text-gray-400 font-sans overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8"
+        >
           <div className="space-y-3">
             <h4 className="text-brand-cream font-serif font-semibold tracking-wider">이용 시간</h4>
             <ul className="space-y-1 text-gray-400 text-[11px]">
@@ -1152,19 +1239,28 @@ export default function App() {
             </p>
           </div>
 
-        </div>
+        </motion.div>
       </section>
 
 
       {/* FOOTER SECTION */}
       <footer className="bg-[#080808] border-t border-neutral-900 py-12 text-gray-500 text-xs font-sans">
-        <div className="max-w-7xl mx-auto px-6 space-y-8">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="max-w-7xl mx-auto px-6 space-y-8"
+        >
           
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-neutral-900 pb-8">
-            <div className="text-left">
-              <h3 className="text-lg font-serif tracking-widest text-brand-cream">
-                DMARIS <span className="text-brand-bronze font-light text-sm tracking-normal">PREMIUM BUFFET</span>
-              </h3>
+            <div className="text-left flex flex-col gap-1">
+              <img 
+                src="https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/logo%2F%EB%A1%9C%EA%B3%A001.png?alt=media&token=37d18b43-44db-4aa6-8111-ef8c3dd8e56f" 
+                alt="D'MARIS Logo" 
+                className="h-9 w-auto object-contain self-start"
+                referrerPolicy="no-referrer"
+              />
               <p className="text-[10px] tracking-wider text-gray-600 uppercase mt-1">
                 The chapter of beautiful memories starts here
               </p>
@@ -1191,7 +1287,7 @@ export default function App() {
             </div>
           </div>
 
-        </div>
+        </motion.div>
       </footer>
         </>
       )}

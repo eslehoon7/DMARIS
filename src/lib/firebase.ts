@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAuth } from "firebase/auth";
 
@@ -17,6 +17,15 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 // Pass custom databaseId to getFirestore
 const db = getFirestore(app, "ai-studio-dmarispremiumbuf-844eda9b-a845-4783-93c1-1e06e717b89e");
+
+// Enable offline persistence for ultra-fast instantaneous local loads
+enableIndexedDbPersistence(db).catch((err) => {
+  if (err.code === 'failed-precondition') {
+    console.warn('Firestore persistence failed: Multiple tabs open');
+  } else if (err.code === 'unimplemented') {
+    console.warn('Firestore persistence unavailable in this browser');
+  }
+});
 
 const storage = getStorage(app, "gs://dmaris-932df.firebasestorage.app");
 const auth = getAuth(app);
