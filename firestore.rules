@@ -59,6 +59,15 @@ service cloud.firestore {
         && data.date is string && data.date.size() <= 50;
     }
 
+    function isValidHeroImage(data) {
+      return data.keys().hasAll(['id', 'imageUrl'])
+        && data.id is string && data.id.size() <= 128
+        && data.imageUrl is string && data.imageUrl.size() <= 2000
+        && (!('title' in data) || (data.title is string && data.title.size() <= 200))
+        && (!('subtitle' in data) || (data.subtitle is string && data.subtitle.size() <= 200))
+        && (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50));
+    }
+
     match /reservations/{reservationId} {
       allow read: if true;
       allow create: if isValidId(reservationId) && isValidReservation(request.resource.data);
@@ -84,6 +93,13 @@ service cloud.firestore {
       allow read: if true;
       allow create: if isValidId(reviewId) && isValidReview(request.resource.data);
       allow update: if isValidId(reviewId) && isValidReview(request.resource.data);
+      allow delete: if true;
+    }
+
+    match /hero_images/{heroImageId} {
+      allow read: if true;
+      allow create: if isValidId(heroImageId) && isValidHeroImage(request.resource.data);
+      allow update: if isValidId(heroImageId) && isValidHeroImage(request.resource.data);
       allow delete: if true;
     }
   }

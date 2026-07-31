@@ -67,6 +67,19 @@
         "eventDate": { "type": "string" }
       },
       "required": ["id", "author", "eventType", "content", "rating", "date"]
+    },
+    "HeroImage": {
+      "title": "HeroImage",
+      "description": "Main banner hero images displayed on home page slideshow",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "imageUrl"]
     }
   },
   "firestore": {
@@ -85,6 +98,10 @@
     "/reviews/{reviewId}": {
       "schema": "Review",
       "description": "Collection of customer reviews"
+    },
+    "/hero_images/{heroImageId}": {
+      "schema": "HeroImage",
+      "description": "Collection of main hero banner images"
     }
   }
 }

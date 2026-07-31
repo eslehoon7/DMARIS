@@ -50,3 +50,11 @@ export interface Review {
   phone?: string;
   eventDate?: string;
 }
+
+export interface HeroImage {
+  id: string;
+  title?: string;
+  subtitle?: string;
+  imageUrl: string;
+  createdAt?: string;
+}

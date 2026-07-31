@@ -332,24 +332,9 @@ export default function ServicePage({
 
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
-  // Dynamic image fetching for category + subcategory (returns top 12 latest matching photos)
+  // Dynamic image fetching for category + subcategory (returns directly uploaded photos)
   const images = React.useMemo(() => {
-    // 1. Get static preset images
-    const catData = subCategoryImages[activeTab] || {};
-    let presetImages: string[] = [];
-    if (activeSubCategory === "전체") {
-      const allImgs: string[] = [];
-      Object.values(catData).forEach(list => {
-        list.forEach(img => {
-          if (!allImgs.includes(img)) allImgs.push(img);
-        });
-      });
-      presetImages = allImgs;
-    } else {
-      presetImages = catData[activeSubCategory] || [];
-    }
-
-    // 2. Get user-uploaded images for this category
+    // Get user-uploaded / registered gallery images for this category
     const catCode = tabToCategoryMap[activeTab];
     const userUploaded = (galleryItems || [])
       .filter(item => item.category === catCode)
@@ -368,8 +353,8 @@ export default function ServicePage({
       })
       .map(item => item.imageUrl);
 
-    // Combine: user uploaded first (newest), then presets, taking up to 12 photos
-    return [...userUploaded, ...presetImages].slice(0, 12);
+    // Return only user-uploaded/registered gallery images
+    return userUploaded;
   }, [activeTab, activeSubCategory, galleryItems]);
 
   const subCategoryLookup = React.useMemo(() => {

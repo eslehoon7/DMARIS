@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { MenuItem, GalleryItem, Review, Reservation } from '../types';
+import { MenuItem, GalleryItem, Review, Reservation, HeroImage } from '../types';
 
 // High-quality, professional food & venue photos from Unsplash
 export const initialMenuItems: MenuItem[] = [
@@ -281,5 +281,29 @@ export const initialReservations: Reservation[] = [
     notes: '세미나 진행용 마이크 및 대형 빔 프로젝터, 노트북 연결선 요청드립니다. 회사 법인카드 결제 예정입니다.',
     status: 'PENDING',
     createdAt: '2026-07-07 10:20'
+  }
+];
+
+export const initialHeroImages: HeroImage[] = [
+  {
+    id: 'hero-1',
+    title: '품격 있는 순간',
+    subtitle: '드마리스에서 완성됩니다',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2FKakaoTalk_20260706_124040941_02.jpg?alt=media&token=b893693e-571e-400a-b146-0922d08c7a27',
+    createdAt: '2026-07-01'
+  },
+  {
+    id: 'hero-2',
+    title: '최고의 마스터 셰프 군단',
+    subtitle: '프리미엄 원식재료와 라이브 뷔페 요리',
+    imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1600&auto=format&fit=crop&q=80',
+    createdAt: '2026-07-02'
+  },
+  {
+    id: 'hero-3',
+    title: '세상에 단 하나뿐인 연회 공간',
+    subtitle: '돌잔치 · 웨딩 · 회갑연 · 기업행사 전문 연회장',
+    imageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&auto=format&fit=crop&q=80',
+    createdAt: '2026-07-03'
   }
 ];

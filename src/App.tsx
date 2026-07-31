@@ -4,12 +4,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Reservation, MenuItem, GalleryItem, Review } from './types';
+import { Reservation, MenuItem, GalleryItem, Review, HeroImage } from './types';
 import { 
   initialMenuItems,
   initialGalleryItems, 
   initialReservations, 
-  initialReviews 
+  initialReviews,
+  initialHeroImages
 } from './data/initialData';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, query } from "firebase/firestore";
 import { db, handleFirestoreError, OperationType } from "./lib/firebase";
@@ -106,6 +107,18 @@ export default function App() {
     const saved = localStorage.getItem('dmaris_reviews_v1');
     return saved ? JSON.parse(saved) : initialReviews;
   });
+
+  const [heroImages, setHeroImages] = useState<HeroImage[]>(initialHeroImages);
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+
+  // Auto-advance hero slideshow every 5 seconds
+  useEffect(() => {
+    if (heroImages.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [heroImages.length]);
 
   // Sync state to localStorage whenever modified
   useEffect(() => {
@@ -232,6 +245,43 @@ export default function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const q = query(collection(db, "hero_images"));
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      if (snapshot.empty) {
+        const batch = writeBatch(db);
+        initialHeroImages.forEach((item) => {
+          const docRef = doc(db, "hero_images", item.id);
+          batch.set(docRef, item);
+        });
+        await batch.commit();
+      } else {
+        const items: HeroImage[] = [];
+        snapshot.forEach((doc) => {
+          items.push(doc.data() as HeroImage);
+        });
+        items.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        setHeroImages(items);
+      }
+    }, (error) => {
+      console.error("Error loading hero_images:", error);
+      handleFirestoreError(error, OperationType.GET, "hero_images");
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Preload hero images so background images load instantly with text
+  useEffect(() => {
+    if (heroImages.length > 0) {
+      heroImages.forEach((item) => {
+        if (item.imageUrl) {
+          const img = new Image();
+          img.src = item.imageUrl;
+        }
+      });
+    }
+  }, [heroImages]);
 
   // Sync updaters to handle Firebase writes with optimistic UI updates & parallel async promises
   const handleUpdateReservations = async (newList: Reservation[]) => {
@@ -370,6 +420,41 @@ export default function App() {
     } catch (e) {
       console.error("Error deleting review:", e);
       alert("후기를 삭제하는 도중 오류가 발생했습니다: " + (e instanceof Error ? e.message : String(e)));
+    }
+  };
+
+  const handleUpdateHeroImages = async (newList: HeroImage[]) => {
+    setHeroImages(newList);
+    try {
+      const newIds = new Set(newList.map(r => r.id));
+      const toDelete = heroImages.filter(r => !newIds.has(r.id));
+      const oldMap = new Map(heroImages.map(r => [r.id, r]));
+      const toWrite = newList.filter(item => {
+        const oldItem = oldMap.get(item.id);
+        if (!oldItem) return true;
+        return JSON.stringify(item) !== JSON.stringify(oldItem);
+      });
+
+      const promises: Promise<void>[] = [];
+      for (const item of toDelete) {
+        promises.push(deleteDoc(doc(db, "hero_images", item.id)));
+      }
+      for (const item of toWrite) {
+        promises.push(setDoc(doc(db, "hero_images", item.id), item));
+      }
+      await Promise.all(promises);
+    } catch (e) {
+      console.error("Sync hero_images error:", e);
+    }
+  };
+
+  const handleDeleteHeroImage = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "hero_images", id));
+      setHeroImages(prev => prev.filter(item => item.id !== id));
+    } catch (e) {
+      console.error("Error deleting hero image:", e);
+      alert("메인사진을 삭제하는 도중 오류가 발생했습니다: " + (e instanceof Error ? e.message : String(e)));
     }
   };
 
@@ -662,90 +747,141 @@ export default function App() {
         </div>
       ) : (
         <>
-          {/* HERO HERO SECTION (Layout 2 premium visual) */}
+          {/* HERO HERO SECTION (Dynamic Background Slideshow from heroImages) */}
           <section className="relative h-screen flex items-center justify-center bg-black overflow-hidden pt-16">
         
-        {/* Extreme High-Quality Luxury Food Plating Background */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2FKakaoTalk_20260706_124040941_02.jpg?alt=media&token=b893693e-571e-400a-b146-0922d08c7a27"
-            alt="Dmaris Premium Buffet Dining spread"
-            className="w-full h-full object-cover object-[center_35%] opacity-60 scale-105 animate-subtle-zoom"
-            referrerPolicy="no-referrer"
-          />
-          {/* Elegant radial/bottom vignetting */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/50 to-transparent" />
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
+            {/* Dynamic Synchronized Background Image Slider & Content */}
+            <AnimatePresence mode="wait">
+              {heroImages.length > 0 && (() => {
+                const activeSlide = heroImages[currentHeroIndex % heroImages.length] || heroImages[0];
+                const titleText = activeSlide?.title || "품격 있는 순간";
+                const subText = activeSlide?.subtitle || "드마리스에서 완성됩니다";
 
-        {/* Content Block */}
-        <div className="relative z-10 max-w-7xl mx-auto px-6 text-center space-y-8 mt-10">
-          
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="space-y-4"
-          >
-            <div className="flex items-center justify-center gap-2">
-              <span className="w-8 h-[1px] bg-brand-bronze" />
-              <span className="font-mono text-xs tracking-[0.3em] uppercase text-brand-bronze font-bold">
-                DMARIS PREMIUM
-              </span>
-              <span className="w-8 h-[1px] bg-brand-bronze" />
+                return (
+                  <motion.div
+                    key={activeSlide.id || currentHeroIndex}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8, ease: "easeInOut" }}
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                  >
+                    {/* Background Image */}
+                    <div className="absolute inset-0 z-0">
+                      <motion.img
+                        initial={{ scale: 1.06 }}
+                        animate={{ scale: 1.0 }}
+                        transition={{ duration: 1.2, ease: "easeOut" }}
+                        src={activeSlide.imageUrl}
+                        alt={activeSlide.title || "Dmaris Main Hero"}
+                        className="w-full h-full object-cover object-[center_35%] opacity-65"
+                        loading="eager"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                      />
+                      {/* Elegant radial/bottom vignetting */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/50 to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+                    </div>
+
+                    {/* Content Block */}
+                    <div className="relative z-10 max-w-7xl mx-auto px-6 text-center space-y-8 mt-10 pointer-events-auto">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="w-8 h-[1px] bg-brand-bronze" />
+                          <span className="font-mono text-xs tracking-[0.3em] uppercase text-brand-bronze font-bold">
+                            DMARIS PREMIUM
+                          </span>
+                          <span className="w-8 h-[1px] bg-brand-bronze" />
+                        </div>
+
+                        <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-serif font-light text-brand-cream tracking-tight leading-tight md:leading-normal">
+                          {titleText} <br />
+                          <span className="font-normal italic text-brand-bronze">{subText}</span>
+                        </h1>
+                      </div>
+
+                      <p className="text-gray-300 text-xs md:text-sm tracking-wider max-w-xl mx-auto font-sans leading-relaxed">
+                        가족모임부터 돌잔치, 웨딩, 기업행사까지 <br />
+                        특별한 하루를 더욱 특별하게 만드는 프리미엄 연회 공간
+                      </p>
+
+                      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                        <button
+                          onClick={() => setIsAboutModalOpen(true)}
+                          className="w-full sm:w-auto border border-brand-bronze/60 text-brand-cream hover:bg-brand-bronze/10 text-xs tracking-widest font-sans uppercase font-medium py-3 px-8 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+                        >
+                          <span>DMARIS 소개</span>
+                          <ChevronRight size={13} className="text-brand-bronze" />
+                        </button>
+
+                        <button
+                          onClick={() => scrollToSection('reserve')}
+                          className="w-full sm:w-auto bg-brand-bronze hover:bg-brand-bronze-dark text-white text-xs tracking-widest font-sans uppercase font-semibold py-3 px-8 rounded-lg transition-all shadow shadow-brand-bronze/20 cursor-pointer"
+                        >
+                          견적 문의 및 예약
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })()}
+            </AnimatePresence>
+
+            {/* Previous / Next Arrow Controls */}
+            {heroImages.length > 1 && (
+              <>
+                <button
+                  onClick={() => setCurrentHeroIndex((prev) => (prev - 1 + heroImages.length) % heroImages.length)}
+                  className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/40 hover:bg-black/70 border border-white/20 text-white/80 hover:text-white flex items-center justify-center transition cursor-pointer backdrop-blur-sm"
+                  title="이전 사진"
+                >
+                  <ChevronLeft size={22} />
+                </button>
+                <button
+                  onClick={() => setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length)}
+                  className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/40 hover:bg-black/70 border border-white/20 text-white/80 hover:text-white flex items-center justify-center transition cursor-pointer backdrop-blur-sm"
+                  title="다음 사진"
+                >
+                  <ChevronRight size={22} />
+                </button>
+              </>
+            )}
+
+        {/* Bottom Pagination / Decoration & Slide Indicator */}
+        <div className="absolute bottom-10 left-6 right-6 max-w-7xl mx-auto flex items-center justify-between text-xs font-mono text-gray-400 z-10">
+          <div className="flex items-center gap-3">
+            <span className="text-brand-bronze font-bold">
+              {String((currentHeroIndex % Math.max(1, heroImages.length)) + 1).padStart(2, '0')}
+            </span>
+            <div className="w-20 sm:w-28 h-[2px] bg-neutral-800 relative rounded-full overflow-hidden">
+              <motion.div
+                className="absolute top-0 left-0 bottom-0 bg-amber-400"
+                initial={{ width: "0%" }}
+                animate={{ width: `${(((currentHeroIndex % Math.max(1, heroImages.length)) + 1) / Math.max(1, heroImages.length)) * 100}%` }}
+                transition={{ duration: 0.4 }}
+              />
             </div>
-
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-light text-brand-cream tracking-tight leading-tight md:leading-normal">
-              품격 있는 순간, <br />
-              <span className="font-normal italic text-brand-bronze">드마리스</span>에서 완성됩니다
-            </h1>
-          </motion.div>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.8 }}
-            className="text-gray-300 text-xs md:text-sm tracking-wider max-w-xl mx-auto font-sans leading-relaxed"
-          >
-            가족모임부터 돌잔치, 웨딩, 기업행사까지 <br />
-            특별한 하루를 더욱 특별하게 만드는 프리미엄 연회 공간
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
-          >
-            <button
-              onClick={() => setIsAboutModalOpen(true)}
-              className="w-full sm:w-auto border border-brand-bronze/60 text-brand-cream hover:bg-brand-bronze/10 text-xs tracking-widest font-sans uppercase font-medium py-3 px-8 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>DMARIS 소개</span>
-              <ChevronRight size={13} className="text-brand-bronze" />
-            </button>
-
-            <button
-              onClick={() => scrollToSection('reserve')}
-              className="w-full sm:w-auto bg-brand-bronze hover:bg-brand-bronze-dark text-white text-xs tracking-widest font-sans uppercase font-semibold py-3 px-8 rounded-lg transition-all shadow shadow-brand-bronze/20 cursor-pointer"
-            >
-              견적 문의 및 예약
-            </button>
-          </motion.div>
-
-        </div>
-
-        {/* Bottom Pagination / Decoration lines (Layout 2 requirement) */}
-        <div className="absolute bottom-10 left-6 right-6 max-w-7xl mx-auto hidden md:flex items-center justify-between text-xs font-mono text-gray-500 z-10">
-          <div className="flex items-center gap-4">
-            <span className="text-brand-bronze font-bold">01</span>
-            <div className="w-24 h-[1px] bg-brand-bronze relative">
-              <div className="absolute top-0 left-0 w-8 h-[1px] bg-amber-400" />
-            </div>
-            <span>03</span>
+            <span>{String(Math.max(1, heroImages.length)).padStart(2, '0')}</span>
           </div>
 
-          <div className="tracking-widest uppercase">
+          {/* Slide Dots */}
+          <div className="flex items-center gap-2">
+            {heroImages.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentHeroIndex(idx)}
+                className={`h-2 rounded-full transition-all cursor-pointer ${
+                  idx === (currentHeroIndex % heroImages.length)
+                    ? 'w-6 bg-brand-bronze'
+                    : 'w-2 bg-neutral-600 hover:bg-neutral-400'
+                }`}
+                title={`${idx + 1}번 메인사진 보기`}
+              />
+            ))}
+          </div>
+
+          <div className="hidden md:block tracking-widest uppercase text-[10px] text-gray-500">
             Designed for Memories of life
           </div>
         </div>
@@ -1369,14 +1505,17 @@ export default function App() {
             menuItems={menuItems}
             galleryItems={galleryItems}
             reviews={reviews}
+            heroImages={heroImages}
             onUpdateReservations={handleUpdateReservations}
             onUpdateMenuItems={handleUpdateMenuItems}
             onUpdateGalleryItems={handleUpdateGalleryItems}
             onUpdateReviews={handleUpdateReviews}
+            onUpdateHeroImages={handleUpdateHeroImages}
             onDeleteReservation={handleDeleteReservation}
             onDeleteMenuItem={handleDeleteMenuItem}
             onDeleteGalleryItem={handleDeleteGalleryItem}
             onDeleteReview={handleDeleteReview}
+            onDeleteHeroImage={handleDeleteHeroImage}
             onClose={() => setIsAdminOpen(false)}
           />
         )}

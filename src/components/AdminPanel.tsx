@@ -4,8 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { Reservation, MenuItem, GalleryItem, Review } from '../types';
-import { Lock, User, FileText, Plus, LogOut, Check, X, Trash2, Camera, Tag, List, DollarSign, Image as ImageIcon, Sparkles, Star } from 'lucide-react';
+import { Reservation, MenuItem, GalleryItem, Review, HeroImage } from '../types';
+import { Lock, User, FileText, Plus, LogOut, Check, X, Trash2, Camera, Tag, List, DollarSign, Image as ImageIcon, Sparkles, Star, Pencil } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ref, uploadString, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../lib/firebase';
@@ -15,14 +15,17 @@ interface AdminPanelProps {
   menuItems: MenuItem[];
   galleryItems: GalleryItem[];
   reviews: Review[];
+  heroImages: HeroImage[];
   onUpdateReservations: (resList: Reservation[]) => void;
   onUpdateMenuItems: (menuList: MenuItem[]) => void;
   onUpdateGalleryItems: (galleryList: GalleryItem[]) => void;
   onUpdateReviews: (reviewList: Review[]) => void;
+  onUpdateHeroImages: (heroList: HeroImage[]) => void;
   onDeleteReservation?: (id: string) => void;
   onDeleteMenuItem?: (id: string) => void;
   onDeleteGalleryItem?: (id: string) => void;
   onDeleteReview?: (id: string) => void;
+  onDeleteHeroImage?: (id: string) => void;
   onClose: () => void;
 }
 
@@ -65,26 +68,42 @@ export default function AdminPanel({
   menuItems,
   galleryItems,
   reviews,
+  heroImages,
   onUpdateReservations,
   onUpdateMenuItems,
   onUpdateGalleryItems,
   onUpdateReviews,
+  onUpdateHeroImages,
   onDeleteReservation,
   onDeleteMenuItem,
   onDeleteGalleryItem,
   onDeleteReview,
+  onDeleteHeroImage,
   onClose
 }: AdminPanelProps) {
   const [adminId, setAdminId] = useState('');
   const [password, setPassword] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginError, setLoginError] = useState('');
-  const [activeTab, setActiveTab] = useState<'bookings' | 'menu' | 'gallery' | 'reviews'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'menu' | 'gallery' | 'reviews' | 'hero'>('bookings');
   const [deleteConfirm, setDeleteConfirm] = useState<{
     id: string;
-    type: 'booking' | 'menu' | 'gallery' | 'review';
+    type: 'booking' | 'menu' | 'gallery' | 'review' | 'hero';
     message: string;
   } | null>(null);
+
+  // Hero Image Form State
+  const [heroTitle, setHeroTitle] = useState('');
+  const [heroSubtitle, setHeroSubtitle] = useState('');
+  const [heroImageUrl, setHeroImageUrl] = useState('');
+  const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
+
+  // Hero Image Edit State
+  const [editingHeroItem, setEditingHeroItem] = useState<HeroImage | null>(null);
+  const [editHeroTitle, setEditHeroTitle] = useState('');
+  const [editHeroSubtitle, setEditHeroSubtitle] = useState('');
+  const [editHeroImageUrl, setEditHeroImageUrl] = useState('');
+  const [editHeroImageFile, setEditHeroImageFile] = useState<File | null>(null);
 
   // Forms State
   const [menuName, setMenuName] = useState('');
@@ -302,8 +321,147 @@ export default function AdminPanel({
       } else {
         onUpdateReviews(reviews.filter(r => r.id !== id));
       }
+    } else if (type === 'hero') {
+      if (onDeleteHeroImage) {
+        onDeleteHeroImage(id);
+      } else {
+        onUpdateHeroImages(heroImages.filter(item => item.id !== id));
+      }
     }
     setDeleteConfirm(null);
+  };
+
+  // Hero Image File Change Helper
+  const handleHeroFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawFile = e.target.files?.[0];
+    if (rawFile) {
+      const compressed = await compressImageFile(rawFile, 1920, 0.85);
+      setHeroImageFile(compressed);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setHeroImageUrl(reader.result);
+        }
+      };
+      reader.readAsDataURL(compressed);
+    }
+  };
+
+  // Add Hero Image Handler
+  const handleAddHeroImage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!heroImageUrl && !heroImageFile) {
+      alert('메인사진 이미지 파일 또는 URL을 입력해 주세요.');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadStatus('메인사진 이미지를 Storage에 업로드 중...');
+
+    let finalImage = heroImageUrl;
+    try {
+      if (heroImageFile) {
+        const fileExt = heroImageFile.name.split('.').pop() || 'jpg';
+        const storageRef = ref(storage, `hero/${Date.now()}.${fileExt}`);
+        const snapshot = await uploadBytes(storageRef, heroImageFile);
+        finalImage = await getDownloadURL(snapshot.ref);
+      } else if (heroImageUrl.startsWith('data:')) {
+        const storageRef = ref(storage, `hero/${Date.now()}.jpg`);
+        const snapshot = await uploadString(storageRef, heroImageUrl, 'data_url');
+        finalImage = await getDownloadURL(snapshot.ref);
+      }
+
+      const newHeroItem: HeroImage = {
+        id: 'hero-' + Date.now(),
+        title: heroTitle.trim() || '품격 있는 순간',
+        subtitle: heroSubtitle.trim() || '드마리스에서 완성됩니다',
+        imageUrl: finalImage,
+        createdAt: new Date().toISOString().slice(0, 10)
+      };
+
+      onUpdateHeroImages([newHeroItem, ...heroImages]);
+      setHeroTitle('');
+      setHeroSubtitle('');
+      setHeroImageUrl('');
+      setHeroImageFile(null);
+      alert('새로운 메인사진이 등록되었습니다! 홈페이지 메인화면 슬라이드에 즉시 반영됩니다.');
+    } catch (error) {
+      console.error("Hero upload error:", error);
+      alert('메인사진 등록 중 업로드 오류: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsUploading(false);
+      setUploadStatus('');
+    }
+  };
+
+  // Start Edit Hero Item
+  const handleStartEditHeroItem = (item: HeroImage) => {
+    setEditingHeroItem(item);
+    setEditHeroTitle(item.title || '');
+    setEditHeroSubtitle(item.subtitle || '');
+    setEditHeroImageUrl(item.imageUrl || '');
+    setEditHeroImageFile(null);
+  };
+
+  // Edit Hero Image File Change Helper
+  const handleEditHeroFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawFile = e.target.files?.[0];
+    if (rawFile) {
+      const compressed = await compressImageFile(rawFile, 1920, 0.85);
+      setEditHeroImageFile(compressed);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setEditHeroImageUrl(reader.result);
+        }
+      };
+      reader.readAsDataURL(compressed);
+    }
+  };
+
+  // Save Edited Hero Item Handler
+  const handleSaveEditHeroItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingHeroItem) return;
+    if (!editHeroImageUrl && !editHeroImageFile) {
+      alert('메인사진 이미지 파일 또는 URL을 입력해 주세요.');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadStatus('메인사진 수정 사항을 저장 중...');
+
+    let finalImage = editHeroImageUrl;
+    try {
+      if (editHeroImageFile) {
+        const fileExt = editHeroImageFile.name.split('.').pop() || 'jpg';
+        const storageRef = ref(storage, `hero/${Date.now()}.${fileExt}`);
+        const snapshot = await uploadBytes(storageRef, editHeroImageFile);
+        finalImage = await getDownloadURL(snapshot.ref);
+      } else if (editHeroImageUrl.startsWith('data:')) {
+        const storageRef = ref(storage, `hero/${Date.now()}.jpg`);
+        const snapshot = await uploadString(storageRef, editHeroImageUrl, 'data_url');
+        finalImage = await getDownloadURL(snapshot.ref);
+      }
+
+      const updatedItem: HeroImage = {
+        ...editingHeroItem,
+        title: editHeroTitle.trim() || '품격 있는 순간',
+        subtitle: editHeroSubtitle.trim() || '드마리스에서 완성됩니다',
+        imageUrl: finalImage
+      };
+
+      const newHeroList = heroImages.map(item => item.id === editingHeroItem.id ? updatedItem : item);
+      onUpdateHeroImages(newHeroList);
+      setEditingHeroItem(null);
+      alert('메인사진 수정이 완료되었습니다! 홈페이지 메인화면에 즉시 반영됩니다.');
+    } catch (error) {
+      console.error("Hero edit upload error:", error);
+      alert('메인사진 수정 중 업로드 오류: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsUploading(false);
+      setUploadStatus('');
+    }
   };
 
   // Add Menu Item
@@ -642,6 +800,18 @@ export default function AdminPanel({
               >
                 <FileText size={15} />
                 <span>고객 리뷰 관리 ({reviews.length})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('hero')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs tracking-wider transition font-sans ${
+                  activeTab === 'hero'
+                    ? 'bg-brand-bronze text-white font-semibold'
+                    : 'text-neutral-400 hover:bg-neutral-900 hover:text-white'
+                }`}
+              >
+                <ImageIcon size={15} />
+                <span>메인사진 관리 ({heroImages.length})</span>
               </button>
             </nav>
           </div>
@@ -1435,6 +1605,103 @@ export default function AdminPanel({
             </div>
           )}
 
+          {/* MAIN HERO IMAGES MANAGEMENT TAB */}
+          {activeTab === 'hero' && (
+            <div className="space-y-8">
+              
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-900 pb-6">
+                <div>
+                  <h3 className="text-lg font-serif font-light text-brand-cream">
+                    메인 화면 대문 사진 관리
+                  </h3>
+                  <p className="text-xs text-neutral-400 mt-1 font-sans">
+                    홈페이지 메인화면(Hero Section)에 로테이션되는 대문 배경사진을 직접 등록/삭제하실 수 있습니다.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="bg-neutral-900 border border-neutral-800 px-4 py-2 rounded-lg text-gray-300">
+                    등록된 메인사진: <strong className="text-brand-bronze font-mono text-sm ml-1">{heroImages.length}장</strong>
+                  </div>
+                </div>
+              </div>
+
+
+
+              {/* Existing Hero Images List */}
+              <div className="bg-neutral-950 rounded-xl border border-neutral-900 overflow-hidden">
+                <div className="p-4 bg-neutral-900/60 border-b border-neutral-800 flex items-center justify-between">
+                  <h4 className="text-xs font-semibold text-gray-300">현재 등록된 메인사진 목록</h4>
+                  <span className="text-[11px] text-gray-500 font-mono">등록된 사진들이 메인 화면에서 순서대로 넘어가며 표시됩니다</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+                  {heroImages.map((hero, index) => (
+                    <div
+                      key={hero.id}
+                      className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden flex flex-col justify-between group hover:border-brand-bronze/50 transition"
+                    >
+                      <div className="relative h-44 bg-black overflow-hidden">
+                        <img
+                          src={hero.imageUrl}
+                          alt={hero.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        />
+                        <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm border border-brand-bronze/40 text-brand-bronze text-[10px] font-mono px-2.5 py-1 rounded-full font-bold">
+                          {`${index + 1}번 슬라이드`}
+                        </div>
+                      </div>
+
+                      <div className="p-4 space-y-2 flex-1 flex flex-col justify-between">
+                        <div>
+                          <p className="text-xs font-semibold text-brand-cream line-clamp-1">{hero.title}</p>
+                          <p className="text-[11px] text-gray-400 line-clamp-1 italic mt-0.5">{hero.subtitle}</p>
+                        </div>
+
+                        <div className="pt-3 border-t border-neutral-800/80 flex items-center justify-between text-[11px] text-gray-500 font-mono">
+                          <span>{hero.createdAt || '등록됨'}</span>
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleStartEditHeroItem(hero)}
+                              className="p-2 bg-neutral-800 hover:bg-neutral-700 text-amber-300 border border-neutral-700/60 rounded-lg transition cursor-pointer flex items-center gap-1 text-[11px] font-medium"
+                              title="사진 수정"
+                            >
+                              <Pencil size={13} />
+                              <span>수정</span>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setDeleteConfirm({
+                                  id: hero.id,
+                                  type: 'hero',
+                                  message: '선택한 메인사진을 삭제하시겠습니까? (삭제 즉시 메인 화면 로테이션에서 제외됩니다)'
+                                });
+                              }}
+                              className="p-2 bg-neutral-800 hover:bg-red-950/80 text-gray-400 hover:text-red-400 border border-neutral-700/60 rounded-lg transition cursor-pointer flex items-center gap-1 text-[11px]"
+                              title="삭제"
+                            >
+                              <Trash2 size={13} />
+                              <span>삭제</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {heroImages.length === 0 && (
+                    <div className="col-span-full py-12 text-center text-gray-500 text-xs">
+                      등록된 메인사진이 없습니다. 상단 폼에서 사진을 올려주세요.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          )}
+
         </main>
 
       </div>
@@ -1467,6 +1734,103 @@ export default function AdminPanel({
                 삭제하기
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hero Image Edit Modal */}
+      {editingHeroItem && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="w-full max-w-lg bg-neutral-950 border border-neutral-800 rounded-xl p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-neutral-900 pb-4">
+              <div className="flex items-center gap-2">
+                <Pencil className="text-brand-bronze" size={18} />
+                <h3 className="text-sm font-semibold text-gray-200">메인사진 정보 및 이미지 수정</h3>
+              </div>
+              <button
+                onClick={() => setEditingHeroItem(null)}
+                className="text-gray-400 hover:text-white p-1 rounded-lg cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditHeroItem} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-gray-400">메인 타이틀</label>
+                <input
+                  type="text"
+                  value={editHeroTitle}
+                  onChange={(e) => setEditHeroTitle(e.target.value)}
+                  placeholder="예: 품격 있는 순간,"
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-bronze"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-gray-400">서브 타이틀</label>
+                <input
+                  type="text"
+                  value={editHeroSubtitle}
+                  onChange={(e) => setEditHeroSubtitle(e.target.value)}
+                  placeholder="예: 드마리스에서 완성됩니다"
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-bronze"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-medium text-gray-400">새 사진 파일 선택 또는 이미지 URL 변경</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleEditHeroFileChange}
+                  className="w-full text-xs text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-bronze/20 file:text-brand-bronze hover:file:bg-brand-bronze/30 cursor-pointer bg-neutral-900 border border-neutral-800 rounded-lg p-2"
+                />
+
+                <input
+                  type="text"
+                  value={editHeroImageUrl}
+                  onChange={(e) => setEditHeroImageUrl(e.target.value)}
+                  placeholder="https://..."
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-bronze"
+                />
+
+                {editHeroImageUrl && (
+                  <div className="relative h-36 rounded-lg overflow-hidden border border-neutral-800 bg-black mt-2">
+                    <img
+                      src={editHeroImageUrl}
+                      alt="수정 미리보기"
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-neutral-900">
+                <button
+                  type="button"
+                  onClick={() => setEditingHeroItem(null)}
+                  className="py-2.5 px-4 bg-neutral-900 hover:bg-neutral-850 text-gray-400 hover:text-white rounded-lg text-xs font-medium border border-neutral-800 transition cursor-pointer"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUploading}
+                  className="py-2.5 px-5 bg-brand-bronze hover:bg-brand-bronze-dark text-white rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {isUploading ? (
+                    <span>{uploadStatus || '저장 중...'}</span>
+                  ) : (
+                    <>
+                      <Check size={14} />
+                      <span>수정 사항 저장</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
