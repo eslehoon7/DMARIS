@@ -285,7 +285,7 @@ export default function App() {
 
   // Maintain original aspect ratio of favicon logo without stretching or distortion
   useEffect(() => {
-    const faviconUrl = "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2F%ED%8C%8C%EB%B9%84%EC%BD%98%EB%A1%9C%EA%B3%A0.png?alt=media&token=f1a19d31-8cba-4fc4-a274-730bcf049eea";
+    const faviconUrl = "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/logo%2F%ED%8C%8C%EB%B9%84%EC%BD%98%EB%A1%9C%EA%B3%A001.png?alt=media&token=c2c3314b-e003-454e-8cfb-0f1a0eaf5ec7";
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
