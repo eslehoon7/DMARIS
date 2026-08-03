@@ -1458,7 +1458,18 @@ export default function App() {
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 text-[11px] text-gray-600">
             <div className="space-y-1">
-              <p>주소: 경기도 부천시 원미구 길주로 71 리파인빌 B/D 3층 드마리스 부천점</p>
+              <p className="flex items-center gap-1.5 flex-wrap">
+                <span>주소: 경기도 부천시 원미구 길주로 71 리파인빌 B/D 3층 드마리스 부천점</span>
+                <a 
+                  href="https://naver.me/xD8WOx2a" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-brand-bronze hover:text-brand-cream underline underline-offset-2 transition ml-1"
+                >
+                  <MapPin size={12} />
+                  네이버 지도
+                </a>
+              </p>
               <p>Tel : 032-323-3888 | Fax : 032-323-3888</p>
               <p>사업자등록번호 : 793-81-03151 | 이메일 : ross604@naver.com</p>
             </div>

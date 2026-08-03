@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Reservation } from '../types';
-import { Calendar, Users, Phone, User, Tag, Clock, AlignLeft, CheckCircle } from 'lucide-react';
+import { Calendar, Users, Phone, User, Tag, Clock, AlignLeft, CheckCircle, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface BookingFormProps {
@@ -119,14 +119,22 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
 
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-full border border-neutral-800 flex items-center justify-center text-brand-bronze shrink-0">
-                  <Clock size={16} />
+                  <MapPin size={16} />
                 </div>
                 <div>
                   <h4 className="text-xs text-gray-500 uppercase tracking-wider font-mono">드마리스 위치</h4>
-                  <p className="text-brand-cream text-sm">
+                  <a 
+                    href="https://naver.me/xD8WOx2a" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-brand-cream hover:text-brand-bronze transition text-sm block group"
+                  >
                     경기도 부천시 원미구 길주로71 <br />
                     리파인빌 B/D 3층 드마리스 부천점
-                  </p>
+                    <span className="text-[11px] text-brand-bronze group-hover:underline flex items-center gap-1 mt-1">
+                      네이버 지도 ↗
+                    </span>
+                  </a>
                 </div>
               </div>
             </div>
