@@ -762,6 +762,15 @@ export default function App() {
               }
               setReviews((prev) => [newReview, ...prev]);
             }}
+            onUpdateReview={async (updatedReview) => {
+              try {
+                await setDoc(doc(db, "reviews", updatedReview.id), updatedReview);
+              } catch (e) {
+                console.error("Error updating review:", e);
+              }
+              setReviews((prev) => prev.map(r => r.id === updatedReview.id ? updatedReview : r));
+            }}
+            onDeleteReview={handleDeleteReview}
             onClose={() => setIsReviewPageOpen(false)}
           />
         </div>

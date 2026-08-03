@@ -201,8 +201,20 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
                   </label>
                   <input
                     type="date"
+                    min="1900-01-01"
+                    max="2099-12-31"
                     value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      if (val) {
+                        const parts = val.split('-');
+                        if (parts[0] && parts[0].length > 4) {
+                          parts[0] = parts[0].slice(0, 4);
+                          val = parts.join('-');
+                        }
+                      }
+                      setDate(val);
+                    }}
                     className="w-full bg-neutral-950/60 border border-neutral-800 rounded-lg py-3 px-4 text-sm text-brand-cream focus:outline-none focus:border-brand-bronze transition"
                   />
                 </div>

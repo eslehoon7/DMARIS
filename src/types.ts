@@ -49,6 +49,8 @@ export interface Review {
   phoneLast4?: string;
   phone?: string;
   eventDate?: string;
+  imageUrl?: string;
+  isApproved?: boolean;
 }
 
 export interface HeroImage {

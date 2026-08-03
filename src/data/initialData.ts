@@ -203,11 +203,12 @@ export const initialReviews: Review[] = [
     eventType: '돌잔치',
     content: '아이의 첫 생일, 드마리스 덕분에 잊지 못할 최고의 하루가 됐습니다. 음식 퀄리티가 정말 높아서 오신 친척 어르신분들이 모두 칭찬하셨어요. 공간 연출도 대만족입니다!',
     rating: 5,
-    date: '2026년 5월',
+    date: '2026년 05월 10일',
     isVerified: true,
     verificationType: 'booking',
     phoneLast4: '3492',
-    eventDate: '2026-05-10'
+    eventDate: '2026-05-10',
+    isApproved: true
   },
   {
     id: 'r2',
@@ -215,11 +216,12 @@ export const initialReviews: Review[] = [
     eventType: '웨딩',
     content: '호텔급 웨딩 홀 못지않은 우아한 생화 장식과 완벽한 서비스였습니다. 특히 스테이크 즉석 구이 코너가 엄청 인기 있었어요. 뷔페 동선도 넓고 쾌적해서 손님분들이 편해하셨습니다.',
     rating: 5,
-    date: '2026년 4월',
+    date: '2026년 04월 18일',
     isVerified: true,
     verificationType: 'booking',
     phoneLast4: '0188',
-    eventDate: '2026-04-18'
+    eventDate: '2026-04-18',
+    isApproved: true
   },
   {
     id: 'r3',
@@ -227,9 +229,10 @@ export const initialReviews: Review[] = [
     eventType: '기업행사',
     content: '연말 부서 송년회를 드마리스에서 진행했습니다. 스크린과 앰프 시스템이 잘 구비되어 있어서 세미나 진행 후 정말 풍족하고 우아한 식사를 마쳤습니다. 다음 연도 행사도 예약 예정입니다.',
     rating: 5,
-    date: '2026년 5월',
+    date: '2026년 05월 15일',
     isVerified: true,
-    verificationType: 'receipt'
+    verificationType: 'receipt',
+    isApproved: true
   },
   {
     id: 'r4',
@@ -237,11 +240,12 @@ export const initialReviews: Review[] = [
     eventType: '칠순잔치',
     content: '아버님 고희연을 위해 소규모 룸을 대여하여 행사를 가졌습니다. 전용 전통상 스타일링과 가족들과 조용히 맛볼 수 있는 최상급 한우, 활어 사시미 덕에 너무 효도한 날이었습니다. 감사해요!',
     rating: 5,
-    date: '2026년 3월',
+    date: '2026년 03월 22일',
     isVerified: true,
     verificationType: 'booking',
     phoneLast4: '7721',
-    eventDate: '2026-03-22'
+    eventDate: '2026-03-22',
+    isApproved: true
   }
 ];
 

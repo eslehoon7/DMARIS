@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Reservation, MenuItem, GalleryItem, Review, HeroImage } from '../types';
-import { Lock, User, FileText, Plus, LogOut, Check, X, Trash2, Camera, Tag, List, DollarSign, Image as ImageIcon, Sparkles, Star, Pencil } from 'lucide-react';
+import { Lock, User, FileText, Plus, LogOut, Check, X, Trash2, Camera, Tag, List, DollarSign, Image as ImageIcon, Sparkles, Star, Pencil, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ref, uploadString, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../lib/firebase';
@@ -1499,17 +1499,20 @@ export default function AdminPanel({
           {activeTab === 'reviews' && (
             <div className="space-y-6">
               
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-serif text-brand-cream">실시간 고객 안심 리뷰 백업 및 관리</h2>
-                  <p className="text-xs text-gray-400 font-sans mt-1">고객들이 작성하고 간 안심 인증 리뷰 및 일반 후기를 조회하고 삭제 관리합니다.</p>
+                  <h2 className="text-xl font-serif text-brand-cream">실시간 고객 안심 리뷰 검수 및 관리</h2>
+                  <p className="text-xs text-gray-400 font-sans mt-1">고객이 작성한 후기를 검수하여 승인/삭제 처리합니다. 승인된 후기만 타인에게 노출됩니다.</p>
                 </div>
-                <div className="flex items-center gap-4 text-xs">
-                  <div className="bg-neutral-900 border border-neutral-800 px-4 py-2 rounded-lg">
-                    총 리뷰 개수: <strong className="text-brand-bronze font-mono">{reviews.length}개</strong>
+                <div className="flex flex-wrap items-center gap-3 text-xs">
+                  <div className="bg-neutral-900 border border-neutral-800 px-3.5 py-2 rounded-lg">
+                    총 리뷰: <strong className="text-brand-bronze font-mono">{reviews.length}개</strong>
                   </div>
-                  <div className="bg-neutral-900 border border-neutral-800 px-4 py-2 rounded-lg">
-                    실예약 안심 인증 리뷰: <strong className="text-amber-500 font-mono">{reviews.filter(r => r.isVerified).length}개</strong>
+                  <div className="bg-amber-950/40 border border-amber-500/30 px-3.5 py-2 rounded-lg">
+                    검수 대기: <strong className="text-amber-400 font-mono">{reviews.filter(r => r.isApproved === false).length}개</strong>
+                  </div>
+                  <div className="bg-teal-950/40 border border-teal-500/30 px-3.5 py-2 rounded-lg">
+                    노출중: <strong className="text-teal-400 font-mono">{reviews.filter(r => r.isApproved !== false).length}개</strong>
                   </div>
                 </div>
               </div>
@@ -1519,77 +1522,111 @@ export default function AdminPanel({
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-neutral-900/80 text-[11px] uppercase tracking-wider text-gray-400 border-b border-neutral-800">
-                      <th className="py-4 px-6 font-semibold">작성 ID / 날짜</th>
-                      <th className="py-4 px-6 font-semibold">작성자 / 연락처 및 행사 정보</th>
-                      <th className="py-4 px-6 font-semibold">연회 종류 / 만족도</th>
-                      <th className="py-4 px-6 font-semibold">리뷰 상세 내용</th>
-                      <th className="py-4 px-6 font-semibold">인증 상태</th>
-                      <th className="py-4 px-6 font-semibold text-center">동작</th>
+                      <th className="py-4 px-5 font-semibold">작성 ID / 날짜</th>
+                      <th className="py-4 px-5 font-semibold">작성자 / 연락처 및 행사 정보</th>
+                      <th className="py-4 px-5 font-semibold">연회 종류 / 만족도</th>
+                      <th className="py-4 px-5 font-semibold">리뷰 상세 내용 & 사진</th>
+                      <th className="py-4 px-5 font-semibold">검수 노출 상태</th>
+                      <th className="py-4 px-5 font-semibold text-center">승인 및 관리</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-900 text-xs text-neutral-300">
-                    {reviews.map(rev => (
-                      <tr key={rev.id} className="hover:bg-neutral-900/30 transition-colors">
-                        <td className="py-4 px-6">
-                          <p className="font-mono text-[11px] font-semibold text-brand-bronze">{rev.id}</p>
-                          <p className="font-mono text-[10px] text-gray-500 mt-1">{rev.date}</p>
-                        </td>
-                        <td className="py-4 px-6">
-                          <p className="font-medium text-brand-cream text-sm">{rev.author} 고객님</p>
-                          <p className="font-mono text-gray-400 mt-1">
-                            연락처: {rev.phone || rev.phoneLast4 || '(미등록)'}
-                          </p>
-                          {rev.eventDate && (
-                            <p className="text-gray-500 font-mono text-[10px] mt-0.5">행사일: {rev.eventDate}</p>
-                          )}
-                        </td>
-                        <td className="py-4 px-6">
-                          <span className="bg-neutral-900 border border-neutral-800 text-gray-300 px-2 py-0.5 rounded text-[10px] tracking-wide uppercase">
-                            {rev.eventType}
-                          </span>
-                          <div className="flex items-center gap-0.5 text-amber-400 mt-2">
-                            {[...Array(5)].map((_, i) => (
-                              <Star 
-                                key={i} 
-                                size={11} 
-                                className={i < rev.rating ? "fill-amber-400 text-amber-400" : "text-neutral-800"} 
-                              />
-                            ))}
-                          </div>
-                        </td>
-                        <td className="py-4 px-6 max-w-sm">
-                          <p className="text-gray-300 leading-relaxed text-[11px] whitespace-pre-wrap break-all">
-                            {rev.content}
-                          </p>
-                        </td>
-                        <td className="py-4 px-6">
-                          {rev.isVerified ? (
-                            <span className="bg-amber-950/40 border border-amber-500/20 text-amber-400 px-2.5 py-1 rounded text-[10px] font-semibold">
-                              실예약 안심 인증
+                    {reviews.map(rev => {
+                      const isPending = rev.isApproved === false;
+
+                      return (
+                        <tr key={rev.id} className={`transition-colors ${isPending ? 'bg-amber-950/10 hover:bg-amber-950/20' : 'hover:bg-neutral-900/30'}`}>
+                          <td className="py-4 px-5">
+                            <p className="font-mono text-[11px] font-semibold text-brand-bronze">{rev.id}</p>
+                            <p className="font-mono text-[10px] text-gray-500 mt-1">{rev.date}</p>
+                          </td>
+                          <td className="py-4 px-5">
+                            <p className="font-medium text-brand-cream text-sm">{rev.author} 고객님</p>
+                            <p className="font-mono text-gray-400 mt-1 text-[11px]">
+                              연락처: {rev.phone || rev.phoneLast4 || '(미등록)'}
+                            </p>
+                            {rev.eventDate && (
+                              <p className="text-gray-500 font-mono text-[10px] mt-0.5">행사일: {rev.eventDate}</p>
+                            )}
+                          </td>
+                          <td className="py-4 px-5">
+                            <span className="bg-neutral-900 border border-neutral-800 text-gray-300 px-2 py-0.5 rounded text-[10px] tracking-wide uppercase">
+                              {rev.eventType}
                             </span>
-                          ) : (
-                            <span className="bg-neutral-900 border border-neutral-800 text-gray-500 px-2.5 py-1 rounded text-[10px]">
-                              일반 비인증 후기
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-4 px-6 text-center">
-                          <button
-                            onClick={() => {
-                              setDeleteConfirm({
-                                id: rev.id,
-                                type: 'review',
-                                message: '이 후기를 영구히 삭제하시겠습니까? (삭제 즉시 홈페이지에서 노출 제한됩니다)'
-                              });
-                            }}
-                            className="w-8 h-8 bg-neutral-900 hover:bg-red-950/60 text-gray-500 hover:text-red-400 border border-neutral-800 rounded flex items-center justify-center transition cursor-pointer mx-auto"
-                            title="삭제"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                            <div className="flex items-center gap-0.5 text-amber-400 mt-2">
+                              {[...Array(5)].map((_, i) => (
+                                <Star 
+                                  key={i} 
+                                  size={11} 
+                                  className={i < rev.rating ? "fill-amber-400 text-amber-400" : "text-neutral-800"} 
+                                />
+                              ))}
+                            </div>
+                          </td>
+                          <td className="py-4 px-5 max-w-sm space-y-2">
+                            <p className="text-gray-300 leading-relaxed text-[11px] whitespace-pre-wrap break-all">
+                              {rev.content}
+                            </p>
+                            {rev.imageUrl && (
+                              <div className="relative aspect-[16/9] w-28 rounded overflow-hidden border border-neutral-800 bg-black">
+                                <img src={rev.imageUrl} alt="첨부사진" className="w-full h-full object-cover" />
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-4 px-5">
+                            {isPending ? (
+                              <span className="bg-amber-950/60 border border-amber-500/40 text-amber-400 font-semibold px-2.5 py-1 rounded text-[10px] flex items-center gap-1 w-fit">
+                                <AlertCircle size={11} />
+                                검수 대기중 (미승인)
+                              </span>
+                            ) : (
+                              <span className="bg-teal-950/60 border border-teal-500/40 text-teal-400 font-semibold px-2.5 py-1 rounded text-[10px] flex items-center gap-1 w-fit">
+                                <CheckCircle2 size={11} />
+                                승인 완료 (노출중)
+                              </span>
+                            )}
+
+                            {rev.isVerified && (
+                              <p className="text-[9px] text-amber-400/80 mt-1.5 font-mono">
+                                ✓ 실예약 안심 인증
+                              </p>
+                            )}
+                          </td>
+                          <td className="py-4 px-5 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => {
+                                  const updated = reviews.map(r => r.id === rev.id ? { ...r, isApproved: isPending ? true : false } : r);
+                                  onUpdateReviews(updated);
+                                }}
+                                className={`px-2.5 py-1.5 rounded text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 ${
+                                  isPending
+                                    ? 'bg-amber-500 hover:bg-amber-600 text-neutral-950 font-bold shadow'
+                                    : 'bg-neutral-850 hover:bg-neutral-800 text-gray-300 border border-neutral-700'
+                                }`}
+                              >
+                                <Check size={12} />
+                                {isPending ? '승인하기' : '승인 취소'}
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setDeleteConfirm({
+                                    id: rev.id,
+                                    type: 'review',
+                                    message: '이 후기를 영구히 삭제하시겠습니까? (삭제 즉시 홈페이지에서 노출 제한됩니다)'
+                                  });
+                                }}
+                                className="w-8 h-8 bg-neutral-900 hover:bg-red-950/60 text-gray-500 hover:text-red-400 border border-neutral-800 rounded flex items-center justify-center transition cursor-pointer"
+                                title="삭제"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
 
                     {reviews.length === 0 && (
                       <tr>

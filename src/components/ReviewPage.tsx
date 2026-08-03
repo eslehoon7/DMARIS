@@ -16,37 +16,117 @@ import {
   Sparkles, 
   HelpCircle,
   Smartphone,
-  ChevronRight
+  ChevronRight,
+  Pencil,
+  Trash2,
+  Camera,
+  Image as ImageIcon
 } from 'lucide-react';
 
 interface ReviewPageProps {
   reviews: Review[];
   onAddReview: (review: Review) => void;
+  onUpdateReview?: (review: Review) => void;
+  onDeleteReview?: (id: string) => void;
   onClose: () => void;
 }
 
 const CATEGORIES = ['전체', '웨딩', '돌잔치', '칠순·팔순', '기업행사', '일반 뷔페', '케이터링'];
 
-export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPageProps) {
+export default function ReviewPage({ reviews, onAddReview, onUpdateReview, onDeleteReview, onClose }: ReviewPageProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('전체');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isWriteOpen, setIsWriteOpen] = useState<boolean>(false);
   const [showOnlyVerified, setShowOnlyVerified] = useState<boolean>(false);
 
-  // Form State
+  // Author local tracking for immediate visibility & edit/delete permissions
+  const [myReviewIds, setMyReviewIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('my_dmaris_review_ids');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const saveMyReviewId = (id: string) => {
+    setMyReviewIds((prev) => {
+      if (prev.includes(id)) return prev;
+      const next = [...prev, id];
+      localStorage.setItem('my_dmaris_review_ids', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const removeMyReviewId = (id: string) => {
+    setMyReviewIds((prev) => {
+      const next = prev.filter((item) => item !== id);
+      localStorage.setItem('my_dmaris_review_ids', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // Form & Editing State
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
   const [author, setAuthor] = useState('');
   const [eventType, setEventType] = useState('웨딩');
   const [rating, setRating] = useState(5);
   const [content, setContent] = useState('');
+  const [imageUrl, setImageUrl] = useState<string>('');
+  const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [formError, setFormError] = useState('');
   const [hoveredStar, setHoveredStar] = useState<number | null>(null);
 
-  // Verification states - Unified Booking verification using mobile phone
+  // Verification states
   const [phone, setPhone] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [bookingChecking, setBookingChecking] = useState(false);
   const [bookingVerified, setBookingVerified] = useState(false);
   const [bookingMatchInfo, setBookingMatchInfo] = useState<string | null>(null);
+
+  // Auto-compress photo down to <500KB using HTML Canvas
+  const compressReviewImage = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          const maxDimension = 1200; // max size for sharp yet lightweight review photos
+
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(e.target?.result as string);
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          // Convert to JPEG with quality 0.82 ensuring file size < 500KB
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          resolve(dataUrl);
+        };
+        img.onerror = () => resolve(e.target?.result as string);
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  };
 
   // Phone number formatter (010-1234-5678)
   const formatPhoneNumber = (value: string) => {
@@ -59,6 +139,32 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhoneNumber(e.target.value);
     setPhone(formatted);
+  };
+
+  // Open Edit Modal
+  const handleOpenEdit = (review: Review) => {
+    setEditingReviewId(review.id);
+    setAuthor(review.author);
+    setEventType(review.eventType);
+    setRating(review.rating);
+    setContent(review.content);
+    setPhone(review.phone || '');
+    setEventDate(review.eventDate || '');
+    setImageUrl(review.imageUrl || '');
+    setBookingVerified(!!review.isVerified);
+    setBookingMatchInfo(review.phoneLast4 ? `DM-RESERVE-${review.phoneLast4}` : null);
+    setFormError('');
+    setIsWriteOpen(true);
+  };
+
+  // Customer Delete Handler
+  const handleDeleteMyReview = (reviewId: string) => {
+    if (window.confirm('작성하신 리뷰를 삭제하시겠습니까?')) {
+      if (onDeleteReview) {
+        onDeleteReview(reviewId);
+      }
+      removeMyReviewId(reviewId);
+    }
   };
 
   // Form submit handler
@@ -74,32 +180,69 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
     }
 
     const currentDate = new Date();
-    const formattedDate = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월`;
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const day = String(currentDate.getDate()).padStart(2, '0');
+    const formattedDate = `${year}년 ${month}월 ${day}일`;
 
-    const newReview: Review = {
-      id: `r-${Date.now()}`,
-      author: author.trim(),
-      eventType,
-      content: content.trim(),
-      rating,
-      date: formattedDate,
-      isVerified: bookingVerified,
-      verificationType: bookingVerified ? 'booking' : 'none',
-      phone: phone.trim() || undefined,
-      eventDate: eventDate || undefined,
-    };
+    if (editingReviewId) {
+      // Edit existing review
+      const existingRev = reviews.find(r => r.id === editingReviewId);
+      const updatedReview: Review = {
+        id: editingReviewId,
+        author: author.trim(),
+        eventType,
+        content: content.trim(),
+        rating,
+        date: existingRev?.date || formattedDate,
+        isVerified: bookingVerified,
+        verificationType: bookingVerified ? 'booking' : (existingRev?.verificationType || 'none'),
+        phone: phone.trim() || undefined,
+        phoneLast4: phone ? phone.replace(/[^0-9]/g, '').slice(-4) : existingRev?.phoneLast4,
+        eventDate: eventDate || undefined,
+        imageUrl: imageUrl.trim() || undefined,
+        isApproved: existingRev?.isApproved ?? false, // Maintain approval state
+      };
 
-    onAddReview(newReview);
+      if (onUpdateReview) {
+        onUpdateReview(updatedReview);
+      } else {
+        onAddReview(updatedReview);
+      }
+    } else {
+      // Create new review
+      const newId = `r-${Date.now()}`;
+      const newReview: Review = {
+        id: newId,
+        author: author.trim(),
+        eventType,
+        content: content.trim(),
+        rating,
+        date: formattedDate,
+        isVerified: bookingVerified,
+        verificationType: bookingVerified ? 'booking' : 'none',
+        phone: phone.trim() || undefined,
+        phoneLast4: phone ? phone.replace(/[^0-9]/g, '').slice(-4) : undefined,
+        eventDate: eventDate || undefined,
+        imageUrl: imageUrl.trim() || undefined,
+        isApproved: false, // Requires admin approval for other visitors
+      };
+
+      onAddReview(newReview);
+      saveMyReviewId(newId);
+    }
 
     // Reset Form
     resetForm();
   };
 
   const resetForm = () => {
+    setEditingReviewId(null);
     setAuthor('');
     setEventType('웨딩');
     setRating(5);
     setContent('');
+    setImageUrl('');
     setFormError('');
     setIsWriteOpen(false);
     setPhone('');
@@ -134,7 +277,6 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
       const last4 = cleanPhone.slice(-4);
       setBookingMatchInfo(`DM-RESERVE-${last4}`);
       
-      // Auto assign matched event type based on selection
       const types = ['웨딩', '돌잔치', '칠순·팔순', '기업행사', '케이터링'];
       const matchedType = types[Math.floor(Math.random() * types.length)];
       setEventType(matchedType);
@@ -142,7 +284,12 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
   };
 
   // Filter & Search
+  // Shows reviews that are approved OR authored by the current visitor
   const filteredReviews = reviews.filter((rev) => {
+    const isMine = myReviewIds.includes(rev.id);
+    const isApprovedOrMine = rev.isApproved !== false || isMine;
+    if (!isApprovedOrMine) return false;
+
     const matchesCategory =
       selectedCategory === '전체' ||
       rev.eventType === selectedCategory ||
@@ -159,10 +306,11 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
   });
 
   // Stats calculation
-  const totalReviewsCount = reviews.length;
-  const verifiedCount = reviews.filter(r => r.isVerified).length;
+  const approvedReviews = reviews.filter(r => r.isApproved !== false);
+  const totalReviewsCount = approvedReviews.length;
+  const verifiedCount = approvedReviews.filter(r => r.isVerified).length;
   const averageRating = totalReviewsCount > 0 
-    ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / totalReviewsCount).toFixed(2)
+    ? (approvedReviews.reduce((acc, curr) => acc + curr.rating, 0) / totalReviewsCount).toFixed(2)
     : "5.00";
 
   return (
@@ -250,7 +398,10 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => setIsWriteOpen(true)}
+              onClick={() => {
+                resetForm();
+                setIsWriteOpen(true);
+              }}
               className="bg-brand-bronze hover:bg-[#b0936e] text-white text-xs font-semibold tracking-wider px-5 py-2.5 rounded-sm inline-flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-brand-bronze/10 shrink-0"
             >
               <Plus size={15} />
@@ -263,94 +414,148 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
             {filteredReviews.length > 0 ? (
-              filteredReviews.map((rev, idx) => (
-                <motion.div
-                  key={rev.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.4, delay: Math.min(idx * 0.05, 0.4), ease: [0.22, 1, 0.36, 1] }}
-                  whileHover={{ y: -5 }}
-                  className={`bg-neutral-950 p-6 rounded-xl border flex flex-col justify-between hover:border-[#C5A880]/30 transition-all duration-300 shadow-xl group relative overflow-hidden ${
-                    rev.isVerified 
-                      ? 'border-neutral-800/80 ring-1 ring-[#C5A880]/10 bg-gradient-to-b from-neutral-950 to-[#0e0d0b]' 
-                      : 'border-neutral-900/60'
-                  }`}
-                >
-                  {/* Luxury accent line at top of cards on hover */}
-                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#C5A880]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              filteredReviews.map((rev, idx) => {
+                const isMyReview = myReviewIds.includes(rev.id);
 
-                  <div className="space-y-4">
-                    
-                    {/* Header: Event Type & Date */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="bg-neutral-900 text-[#C5A880] text-[10px] font-mono font-medium tracking-wider px-2 py-0.5 rounded border border-[#C5A880]/10">
-                          {rev.eventType}
+                return (
+                  <motion.div
+                    key={rev.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.4, delay: Math.min(idx * 0.05, 0.4), ease: [0.22, 1, 0.36, 1] }}
+                    whileHover={{ y: -5 }}
+                    className={`bg-neutral-950 p-6 rounded-xl border flex flex-col justify-between hover:border-[#C5A880]/30 transition-all duration-300 shadow-xl group relative overflow-hidden ${
+                      rev.isVerified 
+                        ? 'border-neutral-800/80 ring-1 ring-[#C5A880]/10 bg-gradient-to-b from-neutral-950 to-[#0e0d0b]' 
+                        : 'border-neutral-900/60'
+                    }`}
+                  >
+                    {/* Luxury accent line at top of cards on hover */}
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#C5A880]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                    <div className="space-y-4">
+                      
+                      {/* Header: Event Type, Badges & Date */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="bg-neutral-900 text-[#C5A880] text-[10px] font-mono font-medium tracking-wider px-2 py-0.5 rounded border border-[#C5A880]/10">
+                            {rev.eventType}
+                          </span>
+                          
+                          {/* My Review Badge */}
+                          {isMyReview && (
+                            <span className="text-[10px] text-brand-cream bg-brand-bronze/20 px-2 py-0.5 rounded border border-brand-bronze/30 font-semibold">
+                              내 작성 리뷰
+                            </span>
+                          )}
+
+                          {/* Pending Approval Badge */}
+                          {rev.isApproved === false && (
+                            <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 font-medium">
+                              검수 대기중
+                            </span>
+                          )}
+
+                          {/* Verified Badges */}
+                          {rev.isVerified && rev.verificationType === 'booking' && (
+                            <span className="text-[10px] text-amber-400 font-semibold tracking-wide flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                              <ShieldCheck size={11} className="fill-amber-400/20 text-amber-400" />
+                              예약 인증
+                            </span>
+                          )}
+                          {rev.isVerified && rev.verificationType === 'receipt' && (
+                            <span className="text-[10px] text-teal-400 font-semibold tracking-wide flex items-center gap-1 bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">
+                              <FileText size={11} className="text-teal-400" />
+                              영수증 인증
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-gray-500 font-mono flex items-center gap-1 shrink-0 ml-1">
+                          <Calendar size={10} />
+                          {rev.date}
                         </span>
-                        
-                        {/* Verified Badges */}
-                        {rev.isVerified && rev.verificationType === 'booking' && (
-                          <span className="text-[10px] text-amber-400 font-semibold tracking-wide flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                            <ShieldCheck size={11} className="fill-amber-400/20 text-amber-400" />
-                            예약 인증
-                          </span>
-                        )}
-                        {rev.isVerified && rev.verificationType === 'receipt' && (
-                          <span className="text-[10px] text-teal-400 font-semibold tracking-wide flex items-center gap-1 bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">
-                            <FileText size={11} className="text-teal-400" />
-                            영수증 인증
-                          </span>
-                        )}
                       </div>
-                      <span className="text-[10px] text-gray-500 font-mono flex items-center gap-1">
-                        <Calendar size={10} />
-                        {rev.date}
-                      </span>
-                    </div>
 
-                    {/* Star Ratings */}
-                    <div className="flex items-center gap-0.5 text-amber-400">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          size={11} 
-                          className={i < rev.rating ? "fill-amber-400 text-amber-400" : "text-neutral-800"} 
-                        />
-                      ))}
-                    </div>
+                      {/* Star Ratings */}
+                      <div className="flex items-center gap-0.5 text-amber-400">
+                        {[...Array(5)].map((_, i) => (
+                          <Star 
+                            key={i} 
+                            size={11} 
+                            className={i < rev.rating ? "fill-amber-400 text-amber-400" : "text-neutral-800"} 
+                          />
+                        ))}
+                      </div>
 
-                    {/* Content */}
-                    <p className="text-xs sm:text-[13px] text-gray-300 leading-relaxed font-sans font-light whitespace-pre-wrap">
-                      {rev.content}
-                    </p>
-                  </div>
-
-                  {/* Writer Info */}
-                  <div className="pt-5 border-t border-neutral-900/60 mt-6 flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-serif text-brand-cream tracking-wide">
-                        {rev.author} <span className="text-gray-500 font-sans text-[11px] font-light">고객님</span>
-                      </span>
-                      {rev.isVerified && rev.verificationType === 'booking' && rev.eventDate && (
-                        <span className="text-[9px] text-gray-500 font-mono mt-0.5">
-                          실행 행사일: {rev.eventDate}
-                        </span>
+                      {/* Attached Image Preview */}
+                      {rev.imageUrl && (
+                        <div className="mt-2 rounded-lg overflow-hidden border border-neutral-800/80 bg-black aspect-[16/9] max-h-48 relative">
+                          <img 
+                            src={rev.imageUrl} 
+                            alt={`${rev.author} 고객님의 후기 사진`}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
                       )}
+
+                      {/* Content */}
+                      <p className="text-xs sm:text-[13px] text-gray-300 leading-relaxed font-sans font-light whitespace-pre-wrap">
+                        {rev.content}
+                      </p>
                     </div>
 
-                    <div className="flex items-center gap-1 text-[9px] text-gray-500 tracking-wider font-mono">
-                      {rev.isVerified ? (
-                        <span className="text-[#C5A880] flex items-center gap-0.5 font-semibold">
-                          <CheckCircle2 size={9} /> DMARIS CERTIFIED
-                        </span>
-                      ) : (
-                        <span>STANDARD REVIEW</span>
+                    {/* Writer Info & Edit/Delete Controls */}
+                    <div className="pt-5 border-t border-neutral-900/60 mt-6 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-serif text-brand-cream tracking-wide">
+                            {rev.author} <span className="text-gray-500 font-sans text-[11px] font-light">고객님</span>
+                          </span>
+                          {rev.isVerified && rev.verificationType === 'booking' && rev.eventDate && (
+                            <span className="text-[9px] text-gray-500 font-mono mt-0.5">
+                              실행 행사일: {rev.eventDate}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1 text-[9px] text-gray-500 tracking-wider font-mono">
+                          {rev.isVerified ? (
+                            <span className="text-[#C5A880] flex items-center gap-0.5 font-semibold">
+                              <CheckCircle2 size={9} /> DMARIS CERTIFIED
+                            </span>
+                          ) : (
+                            <span>STANDARD REVIEW</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Customer Author Action Buttons (Edit & Delete) */}
+                      {isMyReview && (
+                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-900/40">
+                          <button
+                            onClick={() => handleOpenEdit(rev)}
+                            className="text-[11px] text-gray-300 hover:text-brand-cream bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 px-3 py-1 rounded flex items-center gap-1 transition cursor-pointer"
+                          >
+                            <Pencil size={11} className="text-[#C5A880]" />
+                            수정
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMyReview(rev.id)}
+                            className="text-[11px] text-red-400 hover:text-red-300 bg-neutral-900 hover:bg-red-950/40 border border-neutral-800 hover:border-red-900/50 px-3 py-1 rounded flex items-center gap-1 transition cursor-pointer"
+                          >
+                            <Trash2 size={11} />
+                            삭제
+                          </button>
+                        </div>
                       )}
+
                     </div>
-                  </div>
-                </motion.div>
-              ))
+                  </motion.div>
+                );
+              })
             ) : (
               <div className="col-span-full py-24 text-center text-neutral-500 space-y-3 bg-neutral-950 rounded-xl border border-neutral-900">
                 <p className="font-serif font-light text-sm text-gray-400">등록된 후기가 없습니다.</p>
@@ -372,7 +577,7 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
 
       </div>
 
-      {/* Write Review Modal with Security Verification Tabs */}
+      {/* Write / Edit Review Modal */}
       <AnimatePresence>
         {isWriteOpen && (
           <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
@@ -381,7 +586,7 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsWriteOpen(false)}
+              onClick={resetForm}
               className="fixed inset-0 bg-black/85 backdrop-blur-md"
             />
 
@@ -400,10 +605,12 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
                     <ShieldCheck size={11} className="text-[#C5A880]" />
                     DMARIS SECURITY VERIFICATION SYSTEM
                   </span>
-                  <h3 className="text-lg font-serif text-brand-cream">소중한 안심 연회 후기 작성</h3>
+                  <h3 className="text-lg font-serif text-brand-cream">
+                    {editingReviewId ? '작성하신 고객 후기 수정' : '소중한 안심 연회 후기 작성'}
+                  </h3>
                 </div>
                 <button
-                  onClick={() => setIsWriteOpen(false)}
+                  onClick={resetForm}
                   className="text-gray-500 hover:text-white transition p-1 cursor-pointer"
                 >
                   <X size={18} />
@@ -419,7 +626,7 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
                   </div>
                 )}
 
-                {/* Writer Name and Rating */}
+                {/* Writer Name and Event Type */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="block text-[11px] text-gray-400 font-medium tracking-wide">작성자 성함</label>
@@ -451,7 +658,7 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
                   </div>
                 </div>
 
-                {/* Unified Booking Verification - Selected elements removed per user intent */}
+                {/* Unified Booking Verification */}
                 <div className="space-y-3 bg-neutral-900/50 p-4 rounded-sm border border-neutral-800/60">
                   <div className="flex items-center justify-between">
                     <label className="block text-[11px] text-[#C5A880] font-semibold tracking-wide uppercase flex items-center gap-1">
@@ -479,11 +686,23 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] text-gray-400">실제 행사 년월</label>
+                        <label className="text-[10px] text-gray-400">실제 행사 일자 (YYYY-MM-DD)</label>
                         <input
-                          type="month"
+                          type="date"
+                          min="1900-01-01"
+                          max="2099-12-31"
                           value={eventDate}
-                          onChange={(e) => setEventDate(e.target.value)}
+                          onChange={(e) => {
+                            let val = e.target.value;
+                            if (val) {
+                              const parts = val.split('-');
+                              if (parts[0] && parts[0].length > 4) {
+                                parts[0] = parts[0].slice(0, 4);
+                                val = parts.join('-');
+                              }
+                            }
+                            setEventDate(val);
+                          }}
                           className="w-full bg-neutral-950 text-xs text-[#C5A880] px-3 py-2.5 rounded-sm border border-neutral-800 focus:outline-none focus:border-[#C5A880]/50"
                         />
                       </div>
@@ -560,6 +779,61 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
                   </div>
                 </div>
 
+                {/* Photo Upload with Auto-Compression (<500KB) */}
+                <div className="space-y-2 bg-neutral-900/40 p-4 rounded-sm border border-neutral-800/80">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] text-gray-300 font-medium flex items-center gap-1.5">
+                      <Camera size={13} className="text-[#C5A880]" />
+                      후기 사진 첨부 <span className="text-[10px] text-gray-500 font-normal">(선택)</span>
+                    </label>
+                    <span className="text-[10px] text-amber-400 font-mono">
+                      자동 500KB 이하 최적화
+                    </span>
+                  </div>
+
+                  <p className="text-[10px] text-gray-400 leading-relaxed">
+                    어떤 크기의 고화질 사진을 올려도 500KB 이하로 자동 용량 압축 처리됩니다.
+                  </p>
+
+                  <div className="space-y-2 pt-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setIsCompressing(true);
+                          const compressedDataUrl = await compressReviewImage(file);
+                          setImageUrl(compressedDataUrl);
+                          setIsCompressing(false);
+                        }
+                      }}
+                      className="w-full text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-brand-bronze/20 file:text-brand-bronze hover:file:bg-brand-bronze/30 cursor-pointer bg-neutral-950 border border-neutral-800 rounded p-1.5"
+                    />
+
+                    {isCompressing && (
+                      <p className="text-[11px] text-brand-bronze animate-pulse flex items-center gap-1.5 font-mono">
+                        <span className="w-3 h-3 border-2 border-brand-bronze border-t-transparent rounded-full animate-spin" />
+                        사진을 500KB 이하로 자동 용량 압축 중입니다...
+                      </p>
+                    )}
+
+                    {imageUrl && (
+                      <div className="relative mt-2 rounded overflow-hidden border border-neutral-800 bg-black max-h-48 flex items-center justify-center">
+                        <img src={imageUrl} alt="리뷰 첨부사진 미리보기" className="max-h-48 object-contain" />
+                        <button
+                          type="button"
+                          onClick={() => setImageUrl('')}
+                          className="absolute top-2 right-2 bg-black/80 hover:bg-red-950 text-white p-1 rounded-full transition cursor-pointer"
+                          title="사진 삭제"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Content Textarea */}
                 <div className="space-y-1.5">
                   <label className="block text-[11px] text-gray-400 font-medium tracking-wide">리뷰 내용</label>
@@ -587,9 +861,10 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 bg-brand-bronze hover:bg-brand-bronze-dark text-white text-xs font-semibold py-3 transition rounded-sm cursor-pointer shadow-lg shadow-brand-bronze/10"
+                    disabled={isCompressing}
+                    className="flex-1 bg-brand-bronze hover:bg-brand-bronze-dark text-white text-xs font-semibold py-3 transition rounded-sm cursor-pointer shadow-lg shadow-brand-bronze/10 disabled:opacity-50"
                   >
-                    소중한 리뷰 제출하기
+                    {editingReviewId ? '수정 내용 저장하기' : '소중한 리뷰 제출하기'}
                   </button>
                 </div>
 
@@ -601,3 +876,4 @@ export default function ReviewPage({ reviews, onAddReview, onClose }: ReviewPage
     </div>
   );
 }
+
