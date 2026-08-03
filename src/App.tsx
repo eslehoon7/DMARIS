@@ -283,6 +283,43 @@ export default function App() {
     }
   }, [heroImages]);
 
+  // Maintain original aspect ratio of favicon logo without stretching or distortion
+  useEffect(() => {
+    const faviconUrl = "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2F%ED%8C%8C%EB%B9%84%EC%BD%98%EB%A1%9C%EA%B3%A0.png?alt=media&token=f1a19d31-8cba-4fc4-a274-730bcf049eea";
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const size = 128; // High resolution square canvas for crisp display
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Calculate proportional scale so original aspect ratio is 100% preserved
+        const scale = Math.min(size / img.width, size / img.height);
+        const drawWidth = img.width * scale;
+        const drawHeight = img.height * scale;
+        const x = (size - drawWidth) / 2;
+        const y = (size - drawHeight) / 2;
+
+        ctx.clearRect(0, 0, size, size);
+        ctx.drawImage(img, x, y, drawWidth, drawHeight);
+
+        const dataUrl = canvas.toDataURL('image/png');
+
+        const faviconElements = document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']");
+        faviconElements.forEach((el) => {
+          el.href = dataUrl;
+        });
+      } catch (e) {
+        console.warn('Could not generate proportional favicon canvas:', e);
+      }
+    };
+    img.src = faviconUrl;
+  }, []);
+
   // Sync updaters to handle Firebase writes with optimistic UI updates & parallel async promises
   const handleUpdateReservations = async (newList: Reservation[]) => {
     setReservations(newList);
