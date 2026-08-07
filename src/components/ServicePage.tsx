@@ -110,7 +110,7 @@ const serviceDetails = [
       { name: "다양한 행사 전문", detail: "기업행사, 체육대회, 성당·교회 행사, 학교 및 기관 행사, 야외행사, 웨딩 등\n행사 목적에 맞는 출장뷔페를 제공합니다." },
       { name: "풍부한 메뉴 구성과 맞춤 상담", detail: "행사 인원과 예산에 맞춰 다양한 메뉴를 제안해드리며,\n행사 목적에 맞는 최적의 구성을 상담을 통해 안내해드립니다." }
     ],
-    imageUrl: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&auto=format&fit=crop&q=80",
+    imageUrl: "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941-1.jpg?alt=media&token=67f3c057-cc0e-4eb2-baac-81829d4291ad",
     icon: ImageIcon,
     colorAccent: "#8C745C"
   }
@@ -143,9 +143,11 @@ const defaultCaseImages: Record<number, string[]> = {
     "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80"
   ],
   5: [
-    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80"
+    "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941-1.jpg?alt=media&token=67f3c057-cc0e-4eb2-baac-81829d4291ad",
+    "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941_02-1.jpg?alt=media&token=052da4be-d359-416e-b522-b01c1da69943",
+    "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065-1.jpg?alt=media&token=cad7da0b-57fc-48f4-867d-2016120d8467",
+    "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065_05-1.jpg?alt=media&token=54716dd2-5437-460f-8959-bbecb02c6832",
+    "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065_06-1.jpg?alt=media&token=0ad8c5fa-0b58-4f46-974a-82cc03d23738"
   ]
 };
 
@@ -157,7 +159,7 @@ const categoryFallbacks: Record<number, string> = {
   2: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=80",
   3: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80",
   4: "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80",
-  5: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80"
+  5: "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941-1.jpg?alt=media&token=67f3c057-cc0e-4eb2-baac-81829d4291ad"
 };
 
 const subCategoriesConfig: Record<number, string[]> = {
@@ -274,22 +276,20 @@ const subCategoryImages: Record<number, Record<string, string[]>> = {
   },
   5: { // BUFFET
     "출장뷔페": [
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941-1.jpg?alt=media&token=67f3c057-cc0e-4eb2-baac-81829d4291ad",
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941_02-1.jpg?alt=media&token=052da4be-d359-416e-b522-b01c1da69943",
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065-1.jpg?alt=media&token=cad7da0b-57fc-48f4-867d-2016120d8467",
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065_05-1.jpg?alt=media&token=54716dd2-5437-460f-8959-bbecb02c6832",
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065_06-1.jpg?alt=media&token=0ad8c5fa-0b58-4f46-974a-82cc03d23738"
     ],
     "뷔페전경": [
-      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1517263904008-797480d25147?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941-1.jpg?alt=media&token=67f3c057-cc0e-4eb2-baac-81829d4291ad",
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941_02-1.jpg?alt=media&token=052da4be-d359-416e-b522-b01c1da69943",
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065-1.jpg?alt=media&token=cad7da0b-57fc-48f4-867d-2016120d8467"
     ],
     "푸드코너": [
-      "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065_05-1.jpg?alt=media&token=54716dd2-5437-460f-8959-bbecb02c6832",
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065_06-1.jpg?alt=media&token=0ad8c5fa-0b58-4f46-974a-82cc03d23738"
     ]
   }
 };
@@ -332,7 +332,7 @@ export default function ServicePage({
 
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
-  // Dynamic image fetching for category + subcategory (returns directly uploaded photos)
+  // Dynamic image fetching for category + subcategory (returns directly uploaded photos or fallback)
   const images = React.useMemo(() => {
     // Get user-uploaded / registered gallery images for this category
     const catCode = tabToCategoryMap[activeTab];
@@ -353,8 +353,22 @@ export default function ServicePage({
       })
       .map(item => item.imageUrl);
 
-    // Return only user-uploaded/registered gallery images
-    return userUploaded;
+    if (userUploaded.length > 0) {
+      return userUploaded;
+    }
+
+    if (activeSubCategory !== "전체" && subCategoryImages[activeTab]?.[activeSubCategory]) {
+      return subCategoryImages[activeTab][activeSubCategory];
+    }
+
+    const allSubImgs = subCategoryImages[activeTab] 
+      ? Object.values(subCategoryImages[activeTab]).flat()
+      : [];
+    if (allSubImgs.length > 0) {
+      return Array.from(new Set(allSubImgs));
+    }
+
+    return defaultCaseImages[activeTab] || [];
   }, [activeTab, activeSubCategory, galleryItems]);
 
   const subCategoryLookup = React.useMemo(() => {

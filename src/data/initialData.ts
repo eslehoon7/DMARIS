@@ -146,6 +146,46 @@ export const initialGalleryItems: GalleryItem[] = [
     imageUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80'
   },
   {
+    id: 'g-buffet-1',
+    title: '드마리스 출장뷔페 1',
+    category: 'BUFFET',
+    subCategory: '출장뷔페',
+    date: '2026.07',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941-1.jpg?alt=media&token=67f3c057-cc0e-4eb2-baac-81829d4291ad'
+  },
+  {
+    id: 'g-buffet-2',
+    title: '드마리스 출장뷔페 2',
+    category: 'BUFFET',
+    subCategory: '출장뷔페',
+    date: '2026.07',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941_02-1.jpg?alt=media&token=052da4be-d359-416e-b522-b01c1da69943'
+  },
+  {
+    id: 'g-buffet-3',
+    title: '드마리스 출장뷔페 3',
+    category: 'BUFFET',
+    subCategory: '출장뷔페',
+    date: '2026.07',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065-1.jpg?alt=media&token=cad7da0b-57fc-48f4-867d-2016120d8467'
+  },
+  {
+    id: 'g-buffet-4',
+    title: '드마리스 출장뷔페 4',
+    category: 'BUFFET',
+    subCategory: '출장뷔페',
+    date: '2026.07',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065_05-1.jpg?alt=media&token=54716dd2-5437-460f-8959-bbecb02c6832'
+  },
+  {
+    id: 'g-buffet-5',
+    title: '드마리스 출장뷔페 5',
+    category: 'BUFFET',
+    subCategory: '출장뷔페',
+    date: '2026.07',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065_06-1.jpg?alt=media&token=0ad8c5fa-0b58-4f46-974a-82cc03d23738'
+  },
+  {
     id: 'g6',
     title: '명품 활어 스시',
     category: 'BUFFET',

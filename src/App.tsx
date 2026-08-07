@@ -146,9 +146,28 @@ export default function App() {
         await batch.commit();
       } else {
         const items: GalleryItem[] = [];
+        const existingIds = new Set<string>();
         snapshot.forEach((doc) => {
-          items.push(doc.data() as GalleryItem);
+          const itemData = doc.data() as GalleryItem;
+          items.push(itemData);
+          existingIds.add(itemData.id);
         });
+
+        // Seed any missing initial items (e.g., new buffet images) to Firestore
+        const missingItems = initialGalleryItems.filter(item => !existingIds.has(item.id));
+        if (missingItems.length > 0) {
+          try {
+            const batch = writeBatch(db);
+            missingItems.forEach((item) => {
+              const docRef = doc(db, "gallery_items", item.id);
+              batch.set(docRef, item);
+            });
+            batch.commit();
+          } catch (err) {
+            console.error("Error seeding missing gallery items:", err);
+          }
+        }
+
         items.sort((a, b) => {
           const getNum = (id: string) => {
             if (id.startsWith('g-')) {
