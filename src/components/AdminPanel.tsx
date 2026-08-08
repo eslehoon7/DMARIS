@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { Reservation, MenuItem, GalleryItem, Review, HeroImage } from '../types';
 import { Lock, User, FileText, Plus, LogOut, Check, X, Trash2, Camera, Tag, List, DollarSign, Image as ImageIcon, Sparkles, Star, Pencil, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ref, uploadString, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../lib/firebase';
 
@@ -864,8 +864,17 @@ export default function AdminPanel({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-900 text-xs text-neutral-300">
-                    {reservations.map(res => (
-                      <tr key={res.id} className="hover:bg-neutral-900/30 transition-colors">
+                    <AnimatePresence mode="popLayout">
+                      {reservations.map(res => (
+                        <motion.tr
+                          key={res.id}
+                          layout
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, x: -30, backgroundColor: 'rgba(239, 68, 68, 0.25)', transition: { duration: 0.25 } }}
+                          transition={{ duration: 0.25 }}
+                          className="hover:bg-neutral-900/30 transition-colors"
+                        >
                         <td className="py-4 px-6">
                           <p className="font-mono text-[10px] text-gray-500">{res.createdAt}</p>
                           <p className="font-mono text-[11px] font-semibold text-brand-bronze mt-0.5">{res.id}</p>
@@ -935,8 +944,9 @@ export default function AdminPanel({
                             </button>
                           </div>
                         </td>
-                      </tr>
+                      </motion.tr>
                     ))}
+                  </AnimatePresence>
 
                     {reservations.length === 0 && (
                       <tr>
@@ -1113,8 +1123,17 @@ export default function AdminPanel({
                 </div>
 
                 <div className="bg-neutral-950 rounded-xl border border-neutral-900 overflow-hidden divide-y divide-neutral-900">
-                  {menuItems.map(item => (
-                    <div key={item.id} className="p-4 flex items-center justify-between gap-4 hover:bg-neutral-900/10 transition">
+                  <AnimatePresence mode="popLayout">
+                    {menuItems.map(item => (
+                      <motion.div
+                        key={item.id}
+                        layout
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, x: -30, scale: 0.95, transition: { duration: 0.25 } }}
+                        transition={{ duration: 0.25 }}
+                        className="p-4 flex items-center justify-between gap-4 hover:bg-neutral-900/10 transition"
+                      >
                       <div className="flex items-center gap-4">
                         <div className="w-16 h-12 rounded overflow-hidden bg-neutral-900 shrink-0 border border-neutral-800">
                           <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -1147,9 +1166,10 @@ export default function AdminPanel({
                           <Trash2 size={13} />
                         </button>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
-                </div>
+                </AnimatePresence>
+              </div>
               </div>
 
             </div>
@@ -1315,8 +1335,17 @@ export default function AdminPanel({
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {galleryItems.map(item => (
-                    <div key={item.id} className="relative aspect-square rounded-lg overflow-hidden border border-neutral-900 group">
+                  <AnimatePresence mode="popLayout">
+                    {galleryItems.map(item => (
+                      <motion.div
+                        key={item.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.85 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.7, transition: { duration: 0.25 } }}
+                        transition={{ duration: 0.25 }}
+                        className="relative aspect-square rounded-lg overflow-hidden border border-neutral-900 group"
+                      >
                       <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" loading="lazy" decoding="async" referrerPolicy="no-referrer" />
                       
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end space-y-1">
@@ -1347,18 +1376,32 @@ export default function AdminPanel({
                       <span className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded text-[8px] text-gray-400 group-hover:opacity-0 transition-opacity">
                         {item.category}
                       </span>
-                    </div>
+                    </motion.div>
                   ))}
-                </div>
+                </AnimatePresence>
+              </div>
               </div>
 
             </div>
           )}
 
           {/* Gallery Edit Modal Overlay */}
-          {editingGalleryItem && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-              <div className="w-full max-w-lg bg-neutral-950 border border-neutral-800 rounded-2xl p-6 space-y-5 text-left text-xs shadow-2xl">
+          <AnimatePresence>
+            {editingGalleryItem && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-full max-w-lg bg-neutral-950 border border-neutral-800 rounded-2xl p-6 space-y-5 text-left text-xs shadow-2xl"
+                >
                 <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
                   <div>
                     <h3 className="text-base font-serif text-brand-cream font-medium">갤러리 스냅 정보 수정</h3>
@@ -1492,9 +1535,10 @@ export default function AdminPanel({
                     </button>
                   </div>
                 </form>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
+        </AnimatePresence>
 
           {activeTab === 'reviews' && (
             <div className="space-y-6">
@@ -1531,11 +1575,20 @@ export default function AdminPanel({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-900 text-xs text-neutral-300">
-                    {reviews.map(rev => {
-                      const isPending = rev.isApproved === false;
+                    <AnimatePresence mode="popLayout">
+                      {reviews.map(rev => {
+                        const isPending = rev.isApproved === false;
 
-                      return (
-                        <tr key={rev.id} className={`transition-colors ${isPending ? 'bg-amber-950/10 hover:bg-amber-950/20' : 'hover:bg-neutral-900/30'}`}>
+                        return (
+                          <motion.tr
+                            key={rev.id}
+                            layout
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, x: -30, backgroundColor: 'rgba(239, 68, 68, 0.25)', transition: { duration: 0.25 } }}
+                            transition={{ duration: 0.25 }}
+                            className={`transition-colors ${isPending ? 'bg-amber-950/10 hover:bg-amber-950/20' : 'hover:bg-neutral-900/30'}`}
+                          >
                           <td className="py-4 px-5">
                             <p className="font-mono text-[11px] font-semibold text-brand-bronze">{rev.id}</p>
                             <p className="font-mono text-[10px] text-gray-500 mt-1">{rev.date}</p>
@@ -1624,9 +1677,10 @@ export default function AdminPanel({
                               </button>
                             </div>
                           </td>
-                        </tr>
+                        </motion.tr>
                       );
                     })}
+                  </AnimatePresence>
 
                     {reviews.length === 0 && (
                       <tr>
@@ -1673,11 +1727,17 @@ export default function AdminPanel({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
-                  {heroImages.map((hero, index) => (
-                    <div
-                      key={hero.id}
-                      className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden flex flex-col justify-between group hover:border-brand-bronze/50 transition"
-                    >
+                  <AnimatePresence mode="popLayout">
+                    {heroImages.map((hero, index) => (
+                      <motion.div
+                        key={hero.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.85 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.7, transition: { duration: 0.25 } }}
+                        transition={{ duration: 0.25 }}
+                        className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden flex flex-col justify-between group hover:border-brand-bronze/50 transition"
+                      >
                       <div className="relative h-44 bg-black overflow-hidden">
                         <img
                           src={hero.imageUrl}
@@ -1725,8 +1785,9 @@ export default function AdminPanel({
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
+                </AnimatePresence>
 
                   {heroImages.length === 0 && (
                     <div className="col-span-full py-12 text-center text-gray-500 text-xs">
@@ -1743,9 +1804,22 @@ export default function AdminPanel({
 
       </div>
 
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-sm bg-neutral-950 border border-neutral-800 rounded-xl p-6 shadow-2xl text-center space-y-5">
+      <AnimatePresence>
+        {deleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-sm bg-neutral-950 border border-neutral-800 rounded-xl p-6 shadow-2xl text-center space-y-5"
+            >
             <div className="w-12 h-12 bg-red-950/40 border border-red-900 rounded-full flex items-center justify-center mx-auto text-red-400">
               <Trash2 size={20} />
             </div>
@@ -1771,14 +1845,28 @@ export default function AdminPanel({
                 삭제하기
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Hero Image Edit Modal */}
-      {editingHeroItem && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-lg bg-neutral-950 border border-neutral-800 rounded-xl p-6 shadow-2xl space-y-5">
+      <AnimatePresence>
+        {editingHeroItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-lg bg-neutral-950 border border-neutral-800 rounded-xl p-6 shadow-2xl space-y-5"
+            >
             <div className="flex items-center justify-between border-b border-neutral-900 pb-4">
               <div className="flex items-center gap-2">
                 <Pencil className="text-brand-bronze" size={18} />
@@ -1868,9 +1956,10 @@ export default function AdminPanel({
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }
