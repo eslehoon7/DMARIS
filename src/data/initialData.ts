@@ -111,39 +111,44 @@ export const initialMenuItems: MenuItem[] = [
 
 export const initialGalleryItems: GalleryItem[] = [
   {
-    id: 'g1',
-    title: '버진로드 웨딩',
+    id: 'g-wedding-1',
+    title: '드마리스 우아한 웨딩홀',
     category: 'WEDDING',
-    date: '2026.06',
-    imageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80'
+    subCategory: '고급웨딩홀',
+    date: '2026.07',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2FKakaoTalk_20260706_124040941_02.jpg?alt=media&token=b893693e-571e-400a-b146-0922d08c7a27'
   },
   {
-    id: 'g2',
-    title: '전통 첫돌 돌상',
+    id: 'g-birthday-1',
+    title: '드마리스 첫돌 잔치',
     category: 'BIRTHDAY',
-    date: '2026.06',
-    imageUrl: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&auto=format&fit=crop&q=80'
+    subCategory: '전통돌상',
+    date: '2026.07',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B2%AB%EB%8F%8C%EC%82%AC%EC%A7%84.jpg?alt=media&token=5856c9df-7c1d-4fd0-8cb1-ba6ff6c199d9'
   },
   {
-    id: 'g3',
-    title: '부모님 칠순잔치',
+    id: 'g-longevity-1',
+    title: '드마리스 칠순·팔순 연회',
     category: 'LONGEVITY',
-    date: '2026.05',
-    imageUrl: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=80'
+    subCategory: '전통생신상',
+    date: '2026.07',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B9%A0%EC%88%9C%2C%ED%8C%94%EC%88%9C%EC%82%AC%EC%A7%84.jpg?alt=media&token=72118016-7ac4-42d4-93a5-189b97272ea1'
   },
   {
-    id: 'g4',
-    title: '비즈니스 기업행사',
+    id: 'g-corporate-1',
+    title: '드마리스 기업 연회 및 포럼',
     category: 'CORPORATE',
-    date: '2026.05',
-    imageUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80'
+    subCategory: '세미나·포럼',
+    date: '2026.07',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B6%9C%EC%9E%A5%EB%B7%94%ED%8E%9801.jpg?alt=media&token=a6cf8cb4-cd32-4ac3-9c96-db71ba0a925f'
   },
   {
-    id: 'g5',
-    title: '프리미엄 케이터링',
+    id: 'g-catering-1',
+    title: '드마리스 럭셔리 케이터링',
     category: 'CATERING',
-    date: '2026.04',
-    imageUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80'
+    subCategory: '럭셔리뷔페',
+    date: '2026.07',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%BC%80%EC%9D%B4%ED%84%B0%EB%A7%8101.jpg?alt=media&token=556b5e80-21d0-4d3c-be45-144bc34db66d'
   },
   {
     id: 'g-buffet-1',
@@ -184,55 +189,6 @@ export const initialGalleryItems: GalleryItem[] = [
     subCategory: '출장뷔페',
     date: '2026.07',
     imageUrl: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065_06-1.jpg?alt=media&token=0ad8c5fa-0b58-4f46-974a-82cc03d23738'
-  },
-  {
-    id: 'g6',
-    title: '명품 활어 스시',
-    category: 'BUFFET',
-    date: '2026.04',
-    imageUrl: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&auto=format&fit=crop&q=80'
-  },
-  {
-    id: 'g7',
-    title: '쇼콜라 디저트',
-    category: 'BUFFET',
-    date: '2026.03',
-    imageUrl: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=800&auto=format&fit=crop&q=80'
-  },
-  {
-    id: 'g8',
-    title: '럭셔리 뷔페 홀',
-    category: 'CORPORATE',
-    date: '2026.03',
-    imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80'
-  },
-  {
-    id: 'g9',
-    title: '스몰 웨딩 연출',
-    category: 'WEDDING',
-    date: '2026.02',
-    imageUrl: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=800&auto=format&fit=crop&q=80'
-  },
-  {
-    id: 'g10',
-    title: '현대식 돌상 파티',
-    category: 'BIRTHDAY',
-    date: '2026.02',
-    imageUrl: 'https://images.unsplash.com/photo-1517263904008-797480d25147?w=800&auto=format&fit=crop&q=80'
-  },
-  {
-    id: 'g11',
-    title: '팔순 잔치 상차림',
-    category: 'LONGEVITY',
-    date: '2026.01',
-    imageUrl: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?w=800&auto=format&fit=crop&q=80'
-  },
-  {
-    id: 'g12',
-    title: '기업 연말 파티',
-    category: 'CORPORATE',
-    date: '2026.01',
-    imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80'
   }
 ];
 

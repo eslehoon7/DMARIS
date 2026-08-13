@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Reservation, MenuItem, GalleryItem, Review, HeroImage } from './types';
 import { 
   initialMenuItems,
@@ -146,17 +146,66 @@ export default function App() {
         await batch.commit();
       } else {
         const items: GalleryItem[] = [];
-        snapshot.forEach((doc) => {
-          const itemData = doc.data() as GalleryItem;
-          items.push(itemData);
+        const existingIds = new Set<string>();
+        const tempDocIdsToDelete: string[] = [];
+
+        snapshot.forEach((docSnap) => {
+          const itemData = docSnap.data() as GalleryItem;
+          // Check if it's a temporary mock photo (Unsplash or legacy g1-g12 ID)
+          const isTemp = /^g\d+$/.test(itemData.id) || (itemData.imageUrl && itemData.imageUrl.includes('images.unsplash.com'));
+          if (isTemp) {
+            tempDocIdsToDelete.push(docSnap.id);
+          } else {
+            items.push(itemData);
+            existingIds.add(itemData.id);
+          }
         });
+
+        // Delete temporary mock photos from Firestore
+        if (tempDocIdsToDelete.length > 0) {
+          try {
+            const batch = writeBatch(db);
+            tempDocIdsToDelete.forEach((id) => {
+              batch.delete(doc(db, "gallery_items", id));
+            });
+            batch.commit();
+          } catch (err) {
+            console.error("Error purging temp gallery docs:", err);
+          }
+        }
+
+        // Seed any missing initial items (e.g. g-buffet-1~5) to Firestore if needed
+        const missingItems = initialGalleryItems.filter(item => !existingIds.has(item.id));
+        if (missingItems.length > 0) {
+          try {
+            const batch = writeBatch(db);
+            missingItems.forEach((item) => {
+              const docRef = doc(db, "gallery_items", item.id);
+              batch.set(docRef, item);
+              items.push(item);
+            });
+            batch.commit();
+          } catch (err) {
+            console.error("Error seeding missing gallery items:", err);
+          }
+        }
 
         items.sort((a, b) => {
           const getNum = (id: string) => {
-            if (id.startsWith('g-')) {
-              return parseInt(id.replace('g-', '')) || Date.now();
+            if (!id) return 0;
+            if (id.startsWith('g-buffet-')) {
+              const num = parseInt(id.replace('g-buffet-', ''), 10);
+              return 1000 + (isNaN(num) ? 0 : num);
             }
-            return parseInt(id.replace('g', '')) || 0;
+            if (id.startsWith('g-')) {
+              const num = parseInt(id.replace('g-', ''), 10);
+              return isNaN(num) ? 0 : num;
+            }
+            if (id.startsWith('g')) {
+              const num = parseInt(id.replace('g', ''), 10);
+              return isNaN(num) ? 0 : num;
+            }
+            return 0;
           };
           return getNum(b.id) - getNum(a.id);
         });
@@ -586,11 +635,21 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Gallery tabs logic
-  const filteredGallery = galleryItems.filter(item => {
-    if (activeGalleryTab === 'ALL') return true;
-    return item.category === activeGalleryTab;
-  });
+  // Gallery tabs logic with deduplication by imageUrl
+  const filteredGallery = useMemo(() => {
+    const categoryFiltered = galleryItems.filter(item => {
+      if (activeGalleryTab === 'ALL') return true;
+      return item.category === activeGalleryTab;
+    });
+
+    const seenUrls = new Set<string>();
+    return categoryFiltered.filter(item => {
+      if (!item.imageUrl) return false;
+      if (seenUrls.has(item.imageUrl)) return false;
+      seenUrls.add(item.imageUrl);
+      return true;
+    });
+  }, [galleryItems, activeGalleryTab]);
 
 
 
@@ -1266,10 +1325,17 @@ export default function App() {
                     className="group relative aspect-[10/7] rounded-lg overflow-hidden bg-gray-200 border border-neutral-200/60 shadow-sm cursor-pointer w-full h-full"
                   >
                     <img
-                      src={snap.imageUrl}
+                      src={snap.imageUrl || 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941-1.jpg?alt=media&token=67f3c057-cc0e-4eb2-baac-81829d4291ad'}
                       alt={snap.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.dataset.failed) {
+                          target.dataset.failed = "true";
+                          target.src = "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941-1.jpg?alt=media&token=67f3c057-cc0e-4eb2-baac-81829d4291ad";
+                        }
+                      }}
                     />
                     {/* Glassmorphism details footer with clickable indicator */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-100 p-4 flex flex-col justify-end space-y-1 text-white z-20">
@@ -1300,88 +1366,113 @@ export default function App() {
       </section>
 
 
-      {/* 04 / COMMUNITY REVIEWS */}
-      <section id="reviews" className="py-24 bg-neutral-900 text-white relative overflow-hidden border-t border-neutral-800">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            
-            {/* Left large core review block (Image 1 Section 04 layout spec) */}
-            <motion.div 
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-              className="lg:col-span-5 space-y-6"
-            >
-              <span className="font-mono text-xs tracking-widest text-brand-bronze uppercase">04 / COMMUNITY</span>
-              
-              <div className="text-brand-bronze">
-                <Quote size={40} className="fill-brand-bronze/10 opacity-75" />
-              </div>
+      {/* 04 / COMMUNITY REVIEWS (Designed as image.png spec) */}
+      <section id="reviews" className="py-24 relative overflow-hidden bg-stone-100/70 text-[#2C2520] border-t border-b border-[#E8DEC8]">
+        {/* Soft overhead culinary background overlay matching image.png */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <img
+            src="https://images.unsplash.com/photo-1555244162-803834f70033?w=1600&auto=format&fit=crop&q=80"
+            alt="Dining Background"
+            className="w-full h-full object-cover opacity-15 filter contrast-125"
+            referrerPolicy="no-referrer"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#FAF8F5]/90 via-[#FAF8F5]/85 to-[#FAF8F5]/90 backdrop-blur-[2px]" />
+        </div>
 
-              <blockquote className="space-y-4">
-                <p className="text-xl md:text-2xl font-serif text-brand-cream italic font-light leading-relaxed">
-                  "아이의 첫 생일, 드마리스 덕분에 온 친지분들과 평생 기억에 남을 완벽한 하루가 됐습니다."
-                </p>
-                <cite className="block font-sans text-xs text-gray-400 not-italic">
-                  — 2026년 5월, 돌잔치 연회 고객 김현아 님 수기
-                </cite>
-              </blockquote>
-
-              <div className="pt-4 flex items-center gap-1.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={14} className="text-amber-400 fill-amber-400" />
-                ))}
-                <span className="text-xs text-gray-400 font-mono ml-2">평균 만족도 4.98 / 5.00</span>
-              </div>
-
-              <div className="pt-4">
-                <button
-                  onClick={() => {
-                    setIsReviewPageOpen(true);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="inline-flex items-center gap-2 text-[11px] font-semibold tracking-wider text-[#C5A880] hover:text-white hover:border-[#C5A880] transition cursor-pointer border border-[#C5A880]/30 px-4 py-2.5 rounded-sm"
-                >
-                  리뷰게시판 더보기 <ChevronRight size={13} />
-                </button>
-              </div>
-            </motion.div>
-
-            {/* Right reviews grid of 4 cards (Image 1 후기 block spec) */}
-            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {reviews.slice(0, 4).map((rev, idx) => (
-                <motion.div 
-                  key={rev.id} 
-                  initial={{ opacity: 0, y: 25 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                  whileHover={{ y: -4 }}
-                  className="bg-neutral-950 p-6 rounded-xl border border-neutral-800/60 space-y-4 hover:border-neutral-700 transition-colors shadow-lg"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xs text-brand-cream font-medium">{rev.author} 고객님</span>
-                      <p className="text-[10px] text-brand-bronze font-mono mt-0.5">{rev.eventType} 연회</p>
-                    </div>
-                    <span className="text-[10px] text-gray-500 font-mono">{rev.date}</span>
-                  </div>
-                  
-                  <p className="text-[11px] text-gray-400 leading-relaxed font-sans line-clamp-4">
-                    {rev.content}
-                  </p>
-
-                  <div className="flex items-center gap-0.5 text-amber-500">
-                    {[...Array(5)].map((_, idx) => (
-                      <Star key={idx} size={10} className={idx < rev.rating ? "fill-current" : "text-neutral-800"} />
-                    ))}
-                  </div>
-                </motion.div>
-              ))}
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          
+          {/* Header block with Pill badge, Title and Subtitle */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center space-y-3 mb-12"
+          >
+            <div className="inline-block px-4 py-1.5 bg-[#F4EFE6] border border-[#E2D8C8] text-[#8C745C] text-xs font-medium rounded-full shadow-xs">
+              고객 만족 후기
             </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif text-[#2C2520] font-normal tracking-tight">
+              드마리스를 경험한 <span className="text-[#A68A70] font-semibold">고객님들의 이야기</span>
+            </h2>
+            <p className="text-gray-600 text-sm md:text-base font-sans max-w-xl mx-auto pt-1 leading-relaxed">
+              드마리스와 함께 특별한 순간을 만들어가신 고객님들의 진솔한 평점과 후기입니다.
+            </p>
+          </motion.div>
 
+          {/* Cards grid (3 columns matching image.png card design without profile photos) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {reviews.slice(0, 3).map((rev, idx) => (
+              <motion.div 
+                key={rev.id} 
+                initial={{ opacity: 0, y: 25 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ y: -6 }}
+                className="bg-white/95 backdrop-blur-md p-8 rounded-2xl border border-[#EFEBE4] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_12px_35px_rgba(166,138,112,0.18)] transition-all duration-300 flex flex-col justify-between text-left h-full group"
+              >
+                <div className="space-y-4">
+                  {/* Star Rating & Numeric Rating Score */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 text-amber-400">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          size={16} 
+                          className={i < rev.rating ? "fill-amber-400 text-amber-400" : "text-gray-200 fill-gray-200"} 
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs font-bold text-gray-700 font-mono">
+                      {rev.rating ? rev.rating.toFixed(1) : "5.0"}
+                    </span>
+                  </div>
+
+                  {/* Review Content inside quotes */}
+                  <p className="text-gray-700 text-sm md:text-[15px] leading-relaxed font-sans italic my-4 min-h-[72px]">
+                    "{rev.content}"
+                  </p>
+                </div>
+
+                {/* Customer Info (NO PROFILE PHOTO) */}
+                <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-4">
+                  <div>
+                    <h4 className="font-semibold text-gray-900 text-sm md:text-base">
+                      {rev.author} 님
+                    </h4>
+                    <p className="text-xs text-[#8C745C] font-sans mt-0.5">
+                      {rev.eventType} 연회
+                    </p>
+                  </div>
+                  <span className="text-[11px] text-gray-400 font-mono">
+                    {rev.date}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
           </div>
+
+          {/* Bottom Action Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mt-12 text-center"
+          >
+            <button
+              onClick={() => {
+                setIsReviewPageOpen(true);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-[#8C745C] bg-white border border-[#E2D8C8] hover:bg-[#A68A70] hover:text-white hover:border-[#A68A70] transition-all duration-300 cursor-pointer px-6 py-3 rounded-full shadow-xs hover:shadow"
+            >
+              <span>전체 고객 후기 및 작성하기</span>
+              <ChevronRight size={14} />
+            </button>
+          </motion.div>
+
         </div>
       </section>
 

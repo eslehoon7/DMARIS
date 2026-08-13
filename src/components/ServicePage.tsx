@@ -151,14 +151,14 @@ const defaultCaseImages: Record<number, string[]> = {
   ]
 };
 
-const DEFAULT_FALLBACK_IMAGE = "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80";
+const DEFAULT_FALLBACK_IMAGE = "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941-1.jpg?alt=media&token=67f3c057-cc0e-4eb2-baac-81829d4291ad";
 
 const categoryFallbacks: Record<number, string> = {
-  0: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80",
-  1: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&auto=format&fit=crop&q=80",
-  2: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=80",
-  3: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80",
-  4: "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80",
+  0: "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941-1.jpg?alt=media&token=67f3c057-cc0e-4eb2-baac-81829d4291ad",
+  1: "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941_02-1.jpg?alt=media&token=052da4be-d359-416e-b522-b01c1da69943",
+  2: "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065-1.jpg?alt=media&token=cad7da0b-57fc-48f4-867d-2016120d8467",
+  3: "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065_05-1.jpg?alt=media&token=54716dd2-5437-460f-8959-bbecb02c6832",
+  4: "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124046065_06-1.jpg?alt=media&token=0ad8c5fa-0b58-4f46-974a-82cc03d23738",
   5: "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/gallery%2FKakaoTalk_20260706_124040941-1.jpg?alt=media&token=67f3c057-cc0e-4eb2-baac-81829d4291ad"
 };
 
@@ -174,104 +174,60 @@ const subCategoriesConfig: Record<number, string[]> = {
 const subCategoryImages: Record<number, Record<string, string[]>> = {
   0: { // WEDDING
     "교회": [
-      "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1438821408060-27c85853633c?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1478812954026-9c750f0e89fc?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2FKakaoTalk_20260706_124040941_02.jpg?alt=media&token=b893693e-571e-400a-b146-0922d08c7a27"
     ],
     "야외": [
-      "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1519225495810-7512c696505a?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2FKakaoTalk_20260706_124040941_02.jpg?alt=media&token=b893693e-571e-400a-b146-0922d08c7a27"
     ],
     "스몰": [
-      "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2FKakaoTalk_20260706_124040941_02.jpg?alt=media&token=b893693e-571e-400a-b146-0922d08c7a27"
     ],
     "고급웨딩홀": [
-      "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2FKakaoTalk_20260706_124040941_02.jpg?alt=media&token=b893693e-571e-400a-b146-0922d08c7a27"
     ]
   },
   1: { // FIRST BIRTHDAY PARTY
     "전통돌상": [
-      "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541167760496-1628856ab772?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B2%AB%EB%8F%8C%EC%82%AC%EC%A7%84.jpg?alt=media&token=5856c9df-7c1d-4fd0-8cb1-ba6ff6c199d9"
     ],
     "현대돌상": [
-      "https://images.unsplash.com/photo-1517263904008-797480d25147?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B2%AB%EB%8F%8C%EC%82%AC%EC%A7%84.jpg?alt=media&token=5856c9df-7c1d-4fd0-8cb1-ba6ff6c199d9"
     ],
     "패키지연출": [
-      "https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1481162854517-d9e353af153d?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B2%AB%EB%8F%8C%EC%82%AC%EC%A7%84.jpg?alt=media&token=5856c9df-7c1d-4fd0-8cb1-ba6ff6c199d9"
     ]
   },
   2: { // LONGEVITY PARTY
     "전통생신상": [
-      "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541167760496-1628856ab772?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B9%A0%EC%88%9C%2C%ED%8C%94%EC%88%9C%EC%82%AC%EC%A7%84.jpg?alt=media&token=72118016-7ac4-42d4-93a5-189b97272ea1"
     ],
     "현대생신상": [
-      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1517263904008-797480d25147?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B9%A0%EC%88%9C%2C%ED%8C%94%EC%88%9C%EC%82%AC%EC%A7%84.jpg?alt=media&token=72118016-7ac4-42d4-93a5-189b97272ea1"
     ],
     "직계가족예식": [
-      "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1516802273409-68526ee1bdd6?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B9%A0%EC%88%9C%2C%ED%8C%94%EC%88%9C%EC%82%AC%EC%A7%84.jpg?alt=media&token=72118016-7ac4-42d4-93a5-189b97272ea1"
     ]
   },
   3: { // CORPORATE EVENTS
     "세미나·포럼": [
-      "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B6%9C%EC%9E%A5%EB%B7%94%ED%8E%9801.jpg?alt=media&token=a6cf8cb4-cd32-4ac3-9c96-db71ba0a925f"
     ],
     "사은회·시상식": [
-      "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B6%9C%EC%9E%A5%EB%B7%94%ED%8E%9801.jpg?alt=media&token=a6cf8cb4-cd32-4ac3-9c96-db71ba0a925f"
     ],
     "연말파티": [
-      "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%B6%9C%EC%9E%A5%EB%B7%94%ED%8E%9801.jpg?alt=media&token=a6cf8cb4-cd32-4ac3-9c96-db71ba0a925f"
     ]
   },
   4: { // CATERING
     "핑거푸드": [
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%BC%80%EC%9D%B4%ED%84%B0%EB%A7%8101.jpg?alt=media&token=556b5e80-21d0-4d3c-be45-144bc34db66d"
     ],
     "럭셔리뷔페": [
-      "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%BC%80%EC%9D%B4%ED%84%B0%EB%A7%8101.jpg?alt=media&token=556b5e80-21d0-4d3c-be45-144bc34db66d"
     ],
     "홈파티박스": [
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80"
+      "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2F%EC%BC%80%EC%9D%B4%ED%84%B0%EB%A7%8101.jpg?alt=media&token=556b5e80-21d0-4d3c-be45-144bc34db66d"
     ]
   },
   5: { // BUFFET
@@ -354,21 +310,26 @@ export default function ServicePage({
       .map(item => item.imageUrl);
 
     if (userUploaded.length > 0) {
-      return userUploaded;
+      return Array.from(new Set(userUploaded));
     }
 
-    if (activeSubCategory !== "전체" && subCategoryImages[activeTab]?.[activeSubCategory]) {
-      return subCategoryImages[activeTab][activeSubCategory];
+    // Fall back to subCategoryImages or all real gallery items, excluding any temporary unsplash images
+    const rawSubImgs = (activeSubCategory !== "전체" && subCategoryImages[activeTab]?.[activeSubCategory])
+      ? subCategoryImages[activeTab][activeSubCategory]
+      : (subCategoryImages[activeTab] ? Object.values(subCategoryImages[activeTab]).flat() : []);
+
+    const nonUnsplashSubImgs = rawSubImgs.filter(url => !url.includes('images.unsplash.com'));
+    if (nonUnsplashSubImgs.length > 0) {
+      return Array.from(new Set(nonUnsplashSubImgs));
     }
 
-    const allSubImgs = subCategoryImages[activeTab] 
-      ? Object.values(subCategoryImages[activeTab]).flat()
-      : [];
-    if (allSubImgs.length > 0) {
-      return Array.from(new Set(allSubImgs));
+    // Fall back to all uploaded gallery items if available
+    const allRealUploaded = (galleryItems || []).map(item => item.imageUrl).filter(url => !url.includes('images.unsplash.com'));
+    if (allRealUploaded.length > 0) {
+      return Array.from(new Set(allRealUploaded));
     }
 
-    return defaultCaseImages[activeTab] || [];
+    return [];
   }, [activeTab, activeSubCategory, galleryItems]);
 
   const subCategoryLookup = React.useMemo(() => {
