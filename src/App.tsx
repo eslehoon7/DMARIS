@@ -600,6 +600,109 @@ export default function App() {
     setReservations(prev => [newRes, ...prev]);
   };
 
+  // Helper for navigating and synchronizing URL paths (/service, /gallery, /reservation, /, /reviews)
+  const navigateTo = (
+    path: string, 
+    options?: { 
+      tabIndex?: number; 
+      viewMode?: 'service' | 'gallery'; 
+      subCat?: string;
+      replace?: boolean;
+      skipScroll?: boolean;
+    }
+  ) => {
+    setIsMobileMenuOpen(false);
+
+    // Normalize path
+    const targetPath = path.startsWith('/') ? path : `/${path}`;
+    
+    // Update Browser History URL
+    try {
+      if (options?.replace) {
+        window.history.replaceState({ path: targetPath }, '', targetPath);
+      } else if (window.location.pathname !== targetPath) {
+        window.history.pushState({ path: targetPath }, '', targetPath);
+      }
+    } catch (e) {
+      console.warn('History navigation error:', e);
+    }
+
+    if (targetPath === '/service') {
+      setIsReviewPageOpen(false);
+      setIsServicePageOpen(true);
+      setServicePageViewMode(options?.viewMode || 'service');
+      if (options?.tabIndex !== undefined) setActiveServiceTab(options.tabIndex);
+      if (!options?.skipScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (targetPath === '/gallery') {
+      setIsReviewPageOpen(false);
+      setIsServicePageOpen(true);
+      setServicePageViewMode('gallery');
+      if (options?.tabIndex !== undefined) setActiveServiceTab(options.tabIndex);
+      if (options?.subCat) setActiveServiceSubCategory(options.subCat);
+      if (!options?.skipScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (targetPath === '/reservation' || targetPath === '/reserve') {
+      setIsServicePageOpen(false);
+      setIsReviewPageOpen(false);
+      setTimeout(() => {
+        const el = document.getElementById('reserve');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 60);
+    } else if (targetPath === '/reviews' || targetPath === '/review') {
+      setIsServicePageOpen(false);
+      setIsReviewPageOpen(true);
+      if (!options?.skipScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else { // Home '/'
+      setIsServicePageOpen(false);
+      setIsReviewPageOpen(false);
+      if (!options?.skipScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Listen to browser direct URL navigation and Back/Forward buttons
+  useEffect(() => {
+    const handleUrlRoute = () => {
+      const pathname = window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/';
+      const hash = window.location.hash.toLowerCase();
+
+      if (pathname === '/service' || hash === '#service') {
+        setIsReviewPageOpen(false);
+        setIsServicePageOpen(true);
+        setServicePageViewMode('service');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (pathname === '/gallery' || hash === '#gallery') {
+        setIsReviewPageOpen(false);
+        setIsServicePageOpen(true);
+        setServicePageViewMode('gallery');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (pathname === '/reservation' || pathname === '/reserve' || hash === '#reserve' || hash === '#reservation') {
+        setIsServicePageOpen(false);
+        setIsReviewPageOpen(false);
+        setTimeout(() => {
+          const el = document.getElementById('reserve');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      } else if (pathname === '/reviews' || pathname === '/review' || hash === '#review' || hash === '#reviews') {
+        setIsServicePageOpen(false);
+        setIsReviewPageOpen(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (pathname === '/' || pathname === '') {
+        setIsServicePageOpen(false);
+        setIsReviewPageOpen(false);
+      }
+    };
+
+    handleUrlRoute();
+
+    window.addEventListener('popstate', handleUrlRoute);
+    return () => window.removeEventListener('popstate', handleUrlRoute);
+  }, []);
+
   // Navigate to specific gallery service page when clicked
   const handleGalleryItemClick = (category: string, title?: string) => {
     let tabIndex = 0;
@@ -641,11 +744,7 @@ export default function App() {
     }
     else tabIndex = 0; // fallback default
     
-    setActiveServiceTab(tabIndex);
-    setActiveServiceSubCategory(subCat);
-    setServicePageViewMode('gallery');
-    setIsServicePageOpen(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigateTo('/gallery', { tabIndex, viewMode: 'gallery', subCat });
   };
 
   // Gallery tabs logic with deduplication by imageUrl
@@ -704,11 +803,7 @@ export default function App() {
           
           {/* Logo */}
           <button 
-            onClick={() => {
-              setIsServicePageOpen(false);
-              setIsReviewPageOpen(false);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            onClick={() => navigateTo('/')}
             className="text-left flex items-center focus:outline-none cursor-pointer group"
           >
             <img 
@@ -724,9 +819,9 @@ export default function App() {
 
           {/* PC Navigation Links (Layout 2 spec) */}
           <nav className={`hidden md:flex items-center gap-8 text-xs tracking-widest font-sans font-medium transition-colors duration-300 ${(isScrolled || isServicePageOpen || isReviewPageOpen) ? 'text-gray-600' : 'text-gray-400'}`}>
-            <button onClick={() => { setIsServicePageOpen(false); setIsReviewPageOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(!isServicePageOpen && !isReviewPageOpen) ? 'text-brand-bronze font-semibold' : ''}`}>DMARIS</button>
-            <button onClick={() => { setIsReviewPageOpen(false); setIsServicePageOpen(true); setActiveServiceTab(0); setServicePageViewMode('service'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(isServicePageOpen && servicePageViewMode === 'service') ? 'text-brand-bronze font-semibold' : ''}`}>Service</button>
-            <button onClick={() => { setIsReviewPageOpen(false); setIsServicePageOpen(true); setActiveServiceTab(0); setServicePageViewMode('gallery'); setActiveServiceSubCategory('전체'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(isServicePageOpen && servicePageViewMode === 'gallery') ? 'text-brand-bronze font-semibold' : ''}`}>Gallery</button>
+            <button onClick={() => navigateTo('/')} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(!isServicePageOpen && !isReviewPageOpen) ? 'text-brand-bronze font-semibold' : ''}`}>DMARIS</button>
+            <button onClick={() => navigateTo('/service', { tabIndex: 0, viewMode: 'service' })} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(isServicePageOpen && servicePageViewMode === 'service') ? 'text-brand-bronze font-semibold' : ''}`}>Service</button>
+            <button onClick={() => navigateTo('/gallery', { tabIndex: 0, viewMode: 'gallery', subCat: '전체' })} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(isServicePageOpen && servicePageViewMode === 'gallery') ? 'text-brand-bronze font-semibold' : ''}`}>Gallery</button>
           </nav>
 
           {/* Header Action Controls */}
@@ -734,7 +829,7 @@ export default function App() {
             
             {/* Reservation Button - PC Only */}
             <button
-              onClick={() => scrollToSection('reserve')}
+              onClick={() => navigateTo('/reservation')}
               className="hidden sm:inline-flex bg-brand-bronze hover:bg-brand-bronze-dark text-white text-xs font-semibold tracking-wider uppercase py-2 px-5 rounded transition-all shadow shadow-brand-bronze/20 cursor-pointer"
             >
               Reservation
@@ -768,44 +863,25 @@ export default function App() {
           >
             <div className="flex flex-col space-y-4 pt-4 text-center">
               <button 
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setIsServicePageOpen(false);
-                  setIsReviewPageOpen(false);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }} 
+                onClick={() => navigateTo('/')} 
                 className="text-lg font-serif py-3 border-b border-neutral-900 text-brand-cream hover:text-brand-bronze transition"
               >
                 드마리스 브랜드 스토리
               </button>
               <button 
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setIsReviewPageOpen(false);
-                  setIsServicePageOpen(true);
-                  setActiveServiceTab(0);
-                  setServicePageViewMode('service');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }} 
+                onClick={() => navigateTo('/service', { tabIndex: 0, viewMode: 'service' })} 
                 className="text-lg font-serif py-3 border-b border-neutral-900 text-brand-cream hover:text-brand-bronze transition"
               >
                 인생연회 서비스안내
               </button>
               <button 
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setIsServicePageOpen(true);
-                  setActiveServiceTab(0);
-                  setServicePageViewMode('gallery');
-                  setActiveServiceSubCategory('전체');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }} 
+                onClick={() => navigateTo('/gallery', { tabIndex: 0, viewMode: 'gallery', subCat: '전체' })} 
                 className="text-lg font-serif py-3 border-b border-neutral-900 text-brand-cream hover:text-brand-bronze transition"
               >
                 완성된 순간들 갤러리
               </button>
               <button 
-                onClick={() => scrollToSection('reserve')} 
+                onClick={() => navigateTo('/reservation')} 
                 className="text-lg font-serif py-3 bg-brand-bronze text-white rounded-lg mt-4 shadow"
               >
                 실시간 예약 신청하기
@@ -841,7 +917,7 @@ export default function App() {
               setReviews((prev) => prev.map(r => r.id === updatedReview.id ? updatedReview : r));
             }}
             onDeleteReview={handleDeleteReview}
-            onClose={() => setIsReviewPageOpen(false)}
+            onClose={() => navigateTo('/')}
           />
         </div>
       ) : isServicePageOpen ? (
@@ -851,10 +927,7 @@ export default function App() {
             setActiveTab={setActiveServiceTab}
             viewMode={servicePageViewMode}
             initialSubCategory={activeServiceSubCategory}
-            onInquire={() => {
-              setIsServicePageOpen(false);
-              scrollToSection('reserve');
-            }}
+            onInquire={() => navigateTo('/reservation')}
             onAboutClick={() => setIsAboutModalOpen(true)}
             onAdminClick={() => setIsAdminOpen(true)}
             scrollToSection={scrollToSection}
@@ -1152,8 +1225,7 @@ export default function App() {
                     glowColor="bronze"
                     onClick={() => {
                       setActiveStoryIndex(idx);
-                      setActiveServiceTab(idx);
-                      setIsServicePageOpen(true);
+                      navigateTo('/service', { tabIndex: idx, viewMode: 'service' });
                     }}
                     className={`group bg-white rounded-xl overflow-hidden border border-[#EFEBE4] text-center shadow-[0_4px_16px_rgba(202,189,173,0.08)] hover:shadow-[0_12px_28px_rgba(202,189,173,0.22)] transition-all duration-300 flex flex-col justify-between cursor-pointer h-full ${
                       activeStoryIndex === idx ? 'ring-2 ring-[#A68A70] shadow-[0_12px_28px_rgba(202,189,173,0.22)]' : ''
@@ -1245,9 +1317,7 @@ export default function App() {
                   
                   <button
                     onClick={() => {
-                      setActiveServiceTab(activeStoryIndex);
-                      setServicePageViewMode('service');
-                      setIsServicePageOpen(true);
+                      navigateTo('/service', { tabIndex: activeStoryIndex, viewMode: 'service' });
                     }}
                     className="bg-[#A68A70] hover:bg-[#8F765D] text-white text-[11px] font-sans font-semibold tracking-wider uppercase py-2 px-4 rounded transition-colors self-start sm:self-center cursor-pointer shadow-sm"
                   >
