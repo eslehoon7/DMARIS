@@ -692,11 +692,15 @@ export default function App() {
       
       {/* HEADER SECTION (Matching PC & Mobile layout requirements) */}
       <header className={`fixed top-0 left-0 w-full z-40 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/80 backdrop-blur-md border-b border-neutral-200/40 shadow-md' 
-          : 'bg-gradient-to-b from-black/80 via-black/30 to-transparent'
+        (isServicePageOpen || isReviewPageOpen)
+          ? isScrolled
+            ? 'bg-[#FAF8F5]/50 backdrop-blur-md border-b border-[#EFEBE4]/50 shadow-xs'
+            : 'bg-[#FAF8F5] border-b border-[#EFEBE4] shadow-xs'
+          : isScrolled 
+            ? 'bg-white/50 backdrop-blur-md border-b border-neutral-200/40 shadow-md' 
+            : 'bg-gradient-to-b from-black/80 via-black/30 to-transparent'
       }`}>
-        <div className={`max-w-7xl mx-auto px-6 flex items-center justify-between transition-all duration-300 ${isScrolled ? 'py-3' : 'py-4'}`}>
+        <div className={`max-w-7xl mx-auto px-6 flex items-center justify-between transition-all duration-300 ${isScrolled || isServicePageOpen || isReviewPageOpen ? 'py-3' : 'py-4'}`}>
           
           {/* Logo */}
           <button 
@@ -708,7 +712,7 @@ export default function App() {
             className="text-left flex items-center focus:outline-none cursor-pointer group"
           >
             <img 
-              src={isScrolled 
+              src={(isScrolled || isServicePageOpen || isReviewPageOpen)
                 ? "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/logo%2F%EB%A1%9C%EA%B3%A001.png?alt=media&token=37d18b43-44db-4aa6-8111-ef8c3dd8e56f"
                 : "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/logo%2F%EB%A1%9C%EA%B3%A002.png?alt=media&token=a71ef1da-c59c-4aa8-a955-ae3d24e06472"
               }
@@ -719,7 +723,7 @@ export default function App() {
           </button>
 
           {/* PC Navigation Links (Layout 2 spec) */}
-          <nav className={`hidden md:flex items-center gap-8 text-xs tracking-widest font-sans font-medium transition-colors duration-300 ${isScrolled ? 'text-gray-600' : 'text-gray-400'}`}>
+          <nav className={`hidden md:flex items-center gap-8 text-xs tracking-widest font-sans font-medium transition-colors duration-300 ${(isScrolled || isServicePageOpen || isReviewPageOpen) ? 'text-gray-600' : 'text-gray-400'}`}>
             <button onClick={() => { setIsServicePageOpen(false); setIsReviewPageOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(!isServicePageOpen && !isReviewPageOpen) ? 'text-brand-bronze font-semibold' : ''}`}>DMARIS</button>
             <button onClick={() => { setIsReviewPageOpen(false); setIsServicePageOpen(true); setActiveServiceTab(0); setServicePageViewMode('service'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(isServicePageOpen && servicePageViewMode === 'service') ? 'text-brand-bronze font-semibold' : ''}`}>Service</button>
             <button onClick={() => { setIsReviewPageOpen(false); setIsServicePageOpen(true); setActiveServiceTab(0); setServicePageViewMode('gallery'); setActiveServiceSubCategory('전체'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(isServicePageOpen && servicePageViewMode === 'gallery') ? 'text-brand-bronze font-semibold' : ''}`}>Gallery</button>
@@ -740,7 +744,7 @@ export default function App() {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className={`md:hidden w-9 h-9 border rounded-lg flex items-center justify-center transition-colors duration-300 cursor-pointer ${
-                isScrolled 
+                (isScrolled || isServicePageOpen || isReviewPageOpen) 
                   ? 'border-neutral-300 text-gray-600 hover:text-gray-900' 
                   : 'border-neutral-800 text-gray-400 hover:text-white'
               }`}
