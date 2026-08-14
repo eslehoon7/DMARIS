@@ -791,18 +791,6 @@ export default function AdminPanel({
               </button>
 
               <button
-                onClick={() => setActiveTab('reviews')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs tracking-wider transition font-sans ${
-                  activeTab === 'reviews'
-                    ? 'bg-brand-bronze text-white font-semibold'
-                    : 'text-neutral-400 hover:bg-neutral-900 hover:text-white'
-                }`}
-              >
-                <FileText size={15} />
-                <span>고객 리뷰 관리 ({reviews.length})</span>
-              </button>
-
-              <button
                 onClick={() => setActiveTab('hero')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs tracking-wider transition font-sans ${
                   activeTab === 'hero'

@@ -345,77 +345,79 @@ export default function ServicePage({
   return (
     <div className="w-full bg-[#FAF8F5] text-[#2C2520] flex flex-col font-sans">
       
-      {/* Top Services Navigation Menu - Centered Container */}
-      <div className="max-w-7xl w-full mx-auto px-6 pt-8 md:pt-12">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full flex flex-col items-center justify-center gap-4 border-b border-[#EFEBE4] pb-6"
-        >
-          <div className="text-center space-y-1">
-            <span className="font-mono text-[9px] tracking-[0.2em] text-[#A68A70] uppercase font-bold">
-              Premium Banquet & Services
-            </span>
-            <h3 className="text-xl md:text-2xl font-serif font-light text-neutral-800">
-              인생의 가장 빛나는 순간을 위한 프리미엄 연회 서비스
-            </h3>
-          </div>
+      {/* Top Services Navigation Banner (Matching main page background #FAF8F5) */}
+      <div className="w-full bg-[#FAF8F5] border-b border-[#EFEBE4]">
+        <div className="max-w-7xl w-full mx-auto px-6 pt-6 pb-8 md:pt-8 md:pb-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full flex flex-col items-center justify-center gap-4"
+          >
+            <div className="text-center space-y-1">
+              <span className="font-mono text-[9px] tracking-[0.2em] text-[#A68A70] uppercase font-bold">
+                Premium Banquet & Services
+              </span>
+              <h3 className="text-xl md:text-2xl font-serif font-light text-neutral-800">
+                인생의 가장 빛나는 순간을 위한 프리미엄 연회 서비스
+              </h3>
+            </div>
 
-          {/* Elegant Horizontal Tabs */}
-          <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mt-1">
-            {serviceDetails.map((service, idx) => {
-              const isSelected = activeTab === idx;
-              return (
-                <motion.button
-                  key={service.title}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setActiveTab(idx)}
-                  className={`py-2 px-4.5 sm:py-2.5 sm:px-6 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 cursor-pointer shadow-sm border ${
-                    isSelected
-                      ? 'bg-[#A68A70] border-[#A68A70] text-white font-semibold shadow-md'
-                      : 'bg-white border-[#EFEBE4] text-neutral-500 hover:text-[#A68A70] hover:border-[#A68A70]/40'
-                  }`}
-                >
-                  <span>{service.korTitle}</span>
-                </motion.button>
-              );
-            })}
-          </div>
+            {/* Elegant Horizontal Tabs */}
+            <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mt-1">
+              {serviceDetails.map((service, idx) => {
+                const isSelected = activeTab === idx;
+                return (
+                  <motion.button
+                    key={service.title}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setActiveTab(idx)}
+                    className={`py-2 px-4.5 sm:py-2.5 sm:px-6 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 cursor-pointer shadow-sm border ${
+                      isSelected
+                        ? 'bg-[#A68A70] border-[#A68A70] text-white font-semibold shadow-md shadow-[#A68A70]/20'
+                        : 'bg-white border-[#EFEBE4] text-neutral-500 hover:text-[#A68A70] hover:border-[#A68A70]/40'
+                    }`}
+                  >
+                    <span>{service.korTitle}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
 
-          {/* Elegant Subcategory Filter Tabs (Dynamic) */}
-          {viewMode === 'gallery' && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="flex flex-col items-center justify-center mt-5 pt-3 border-t border-[#EFEBE4]/60 w-full max-w-2xl mx-auto"
-            >
-              <div className="flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1.5 mt-1">
-                {(subCategoriesConfig[activeTab] || ["전체"]).map((subName, subIdx) => {
-                  const isSubSelected = activeSubCategory === subName;
-                  return (
-                    <React.Fragment key={subName}>
-                      {subIdx > 0 && <span className="text-neutral-300 font-light text-xs select-none">|</span>}
-                      <button
-                        onClick={() => setActiveSubCategory(subName)}
-                        className={`text-xs sm:text-[13px] font-sans tracking-wide transition-all duration-200 cursor-pointer ${
-                          isSubSelected
-                            ? 'text-[#8F765D] font-semibold scale-[1.02]'
-                            : 'text-neutral-400 hover:text-[#A68A70]'
-                        }`}
-                      >
-                        {subName}
-                      </button>
-                    </React.Fragment>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
+            {/* Elegant Subcategory Filter Tabs (Dynamic) */}
+            {viewMode === 'gallery' && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="flex flex-col items-center justify-center mt-4 pt-3 border-t border-[#EFEBE4] w-full max-w-2xl mx-auto"
+              >
+                <div className="flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1.5 mt-1">
+                  {(subCategoriesConfig[activeTab] || ["전체"]).map((subName, subIdx) => {
+                    const isSubSelected = activeSubCategory === subName;
+                    return (
+                      <React.Fragment key={subName}>
+                        {subIdx > 0 && <span className="text-neutral-300 font-light text-xs select-none">|</span>}
+                        <button
+                          onClick={() => setActiveSubCategory(subName)}
+                          className={`text-xs sm:text-[13px] font-sans tracking-wide transition-all duration-200 cursor-pointer ${
+                            isSubSelected
+                              ? 'text-[#8F765D] font-semibold scale-[1.02]'
+                              : 'text-neutral-400 hover:text-[#A68A70]'
+                          }`}
+                        >
+                          {subName}
+                        </button>
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
 
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
 
       {viewMode === 'gallery' ? (

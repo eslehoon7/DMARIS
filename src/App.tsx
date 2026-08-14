@@ -104,7 +104,7 @@ export default function App() {
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(initialGalleryItems);
 
   const [reviews, setReviews] = useState<Review[]>(() => {
-    const saved = localStorage.getItem('dmaris_reviews_v1');
+    const saved = localStorage.getItem('dmaris_reviews_v3');
     return saved ? JSON.parse(saved) : initialReviews;
   });
 
@@ -130,7 +130,7 @@ export default function App() {
   }, [menuItems]);
 
   useEffect(() => {
-    localStorage.setItem('dmaris_reviews_v1', JSON.stringify(reviews));
+    localStorage.setItem('dmaris_reviews_v3', JSON.stringify(reviews));
   }, [reviews]);
 
   // Firestore Real-time synchronization & seeding
@@ -285,9 +285,22 @@ export default function App() {
         await batch.commit();
       } else {
         const items: Review[] = [];
-        snapshot.forEach((doc) => {
-          items.push(doc.data() as Review);
+        let r1NeedsUpdate = false;
+        snapshot.forEach((docSnap) => {
+          const item = docSnap.data() as Review;
+          if (item.id === 'r1' && (!item.content || item.content.startsWith('아이의 첫 생일'))) {
+            item.content = initialReviews[0].content;
+            r1NeedsUpdate = true;
+          }
+          items.push(item);
         });
+        if (r1NeedsUpdate) {
+          try {
+            await setDoc(doc(db, "reviews", "r1"), initialReviews[0], { merge: true });
+          } catch (err) {
+            console.error("Error updating r1 review in Firestore:", err);
+          }
+        }
         items.sort((a, b) => b.date.localeCompare(a.date));
         setReviews(items);
       }
@@ -680,10 +693,10 @@ export default function App() {
       {/* HEADER SECTION (Matching PC & Mobile layout requirements) */}
       <header className={`fixed top-0 left-0 w-full z-40 transition-all duration-300 ${
         isScrolled 
-          ? 'bg-[#0a0a0a]/10 backdrop-blur-md shadow-lg' 
+          ? 'bg-white/80 backdrop-blur-md border-b border-neutral-200/40 shadow-md' 
           : 'bg-gradient-to-b from-black/80 via-black/30 to-transparent'
       }`}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className={`max-w-7xl mx-auto px-6 flex items-center justify-between transition-all duration-300 ${isScrolled ? 'py-3' : 'py-4'}`}>
           
           {/* Logo */}
           <button 
@@ -698,7 +711,7 @@ export default function App() {
               src={isScrolled 
                 ? "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/logo%2F%EB%A1%9C%EA%B3%A001.png?alt=media&token=37d18b43-44db-4aa6-8111-ef8c3dd8e56f"
                 : "https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/logo%2F%EB%A1%9C%EA%B3%A002.png?alt=media&token=a71ef1da-c59c-4aa8-a955-ae3d24e06472"
-              } 
+              }
               alt="D'MARIS Logo" 
               className="h-10 md:h-12 w-auto object-contain transition-all duration-300 group-hover:opacity-90"
               referrerPolicy="no-referrer"
@@ -706,11 +719,10 @@ export default function App() {
           </button>
 
           {/* PC Navigation Links (Layout 2 spec) */}
-          <nav className="hidden md:flex items-center gap-8 text-xs tracking-widest font-sans font-medium text-gray-400">
+          <nav className={`hidden md:flex items-center gap-8 text-xs tracking-widest font-sans font-medium transition-colors duration-300 ${isScrolled ? 'text-gray-600' : 'text-gray-400'}`}>
             <button onClick={() => { setIsServicePageOpen(false); setIsReviewPageOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(!isServicePageOpen && !isReviewPageOpen) ? 'text-brand-bronze font-semibold' : ''}`}>DMARIS</button>
             <button onClick={() => { setIsReviewPageOpen(false); setIsServicePageOpen(true); setActiveServiceTab(0); setServicePageViewMode('service'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(isServicePageOpen && servicePageViewMode === 'service') ? 'text-brand-bronze font-semibold' : ''}`}>Service</button>
             <button onClick={() => { setIsReviewPageOpen(false); setIsServicePageOpen(true); setActiveServiceTab(0); setServicePageViewMode('gallery'); setActiveServiceSubCategory('전체'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${(isServicePageOpen && servicePageViewMode === 'gallery') ? 'text-brand-bronze font-semibold' : ''}`}>Gallery</button>
-            <button onClick={() => { setIsServicePageOpen(false); setIsReviewPageOpen(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`hover:text-brand-bronze transition cursor-pointer uppercase ${isReviewPageOpen ? 'text-brand-bronze font-semibold' : ''}`}>Reviews</button>
           </nav>
 
           {/* Header Action Controls */}
@@ -727,7 +739,11 @@ export default function App() {
             {/* Mobile Hamburger Burger Menu (Image 2 Mobile requirement) */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden w-9 h-9 border border-neutral-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition cursor-pointer"
+              className={`md:hidden w-9 h-9 border rounded-lg flex items-center justify-center transition-colors duration-300 cursor-pointer ${
+                isScrolled 
+                  ? 'border-neutral-300 text-gray-600 hover:text-gray-900' 
+                  : 'border-neutral-800 text-gray-400 hover:text-white'
+              }`}
             >
               {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
@@ -783,17 +799,6 @@ export default function App() {
                 className="text-lg font-serif py-3 border-b border-neutral-900 text-brand-cream hover:text-brand-bronze transition"
               >
                 완성된 순간들 갤러리
-              </button>
-              <button 
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setIsServicePageOpen(false);
-                  setIsReviewPageOpen(true);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }} 
-                className="text-lg font-serif py-3 border-b border-neutral-900 text-brand-cream hover:text-brand-bronze transition"
-              >
-                고객 라이브 리뷰
               </button>
               <button 
                 onClick={() => scrollToSection('reserve')} 
@@ -1387,22 +1392,45 @@ export default function App() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center space-y-3 mb-12"
+            className="text-center mb-12"
           >
-            <div className="inline-block px-4 py-1.5 bg-[#F4EFE6] border border-[#E2D8C8] text-[#8C745C] text-xs font-medium rounded-full shadow-xs">
-              고객 만족 후기
-            </div>
+            <span className="font-mono text-xs tracking-widest text-brand-bronze uppercase block mb-3.5">04 / REVIEW</span>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif text-[#2C2520] font-normal tracking-tight">
               드마리스를 경험한 <span className="text-[#A68A70] font-semibold">고객님들의 이야기</span>
             </h2>
-            <p className="text-gray-600 text-sm md:text-base font-sans max-w-xl mx-auto pt-1 leading-relaxed">
+            <p className="text-gray-600 text-sm md:text-base font-sans max-w-xl mx-auto mt-3 leading-relaxed">
               드마리스와 함께 특별한 순간을 만들어가신 고객님들의 진솔한 평점과 후기입니다.
             </p>
           </motion.div>
 
-          {/* Cards grid (3 columns matching image.png card design without profile photos) */}
+          {/* Cards grid (Static review text as requested) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {reviews.slice(0, 3).map((rev, idx) => (
+            {[
+              {
+                id: 'static-r1',
+                rating: 5,
+                content: '해산물 뷔페를 다녀왔는데 기대 이상으로 만족스러웠어요. 보통 뷔페는 종류만 많고 맛은 평범한 경우가 많은데, 여기는 하나하나 음식 퀄리티가 좋아서 놀랐어요. 특히 해산물 신선도가 좋아서 비린 맛 없이 깔끔했고, 회랑 초밥도 수준급이었어요. 돌잔치나 칠순잔치, 스몰웨딩 같은 가족 행사나 특별한 날에 이용하기에도 분위기가 잘 갖춰져 있어서 좋을 것 같아요. 공간도 깔끔하고 테이블 간 간격도 여유 있어서 편하게 식사할 수 있었어요. 일반 뷔페보다 확실히 한 단계 위 느낌이라 다음에 중요한 자리 생기면 다시 방문하고 싶은 곳이에요.',
+                author: '쿠키랑구찌랑',
+                eventType: '돌잔치',
+                date: '4.19.일'
+              },
+              {
+                id: 'static-r2',
+                rating: 5,
+                content: '친구 생일을 맞아 방문했어요. 음식도 만족했지만 아늑한 분위기와 친절한 직원들의 서비스가 감동이네요. 갑자기 뭉친 자리라 생일케익을 준비못했지만 대표님의 배려로 조각 케익 모듬으로 근사한 케익이 만들어졌고 소중한 순간을 사진으로 남겨주시는 배려도 보여주셨어요. 신선한 스시는 제 몸무게 만큼 먹어서 다이어트는 망혔지만 맛있는 음식과 기분좋은 서비스로 행복한 하루가 됐습니다. 부천에서 보물같은 곳을 발견해서 행복합니다^^',
+                author: '곱게자란아가씨',
+                eventType: '웨딩',
+                date: '3.19.목'
+              },
+              {
+                id: 'static-r3',
+                rating: 5,
+                content: '드마리스 청라점을 2달에 1번꼴로 이용했는데, 이사 가면서 드마리스 부천점을 오늘 처음 방문해 봤다. 나름 이런류의 뷔페를 좋아해서 애슐X, 고메X퀘어, 쿠우X우, 샤브X데이 등 매달 어딘가는 이용하고 있다. 그런데 내가 가 보았던 5만원 이하의 뷔페 중에서 여기 드마리스 부천점이 1등이다. 음식 하나하나의 퀄리티가 말이 안된다. 솔직히 드마리스 청라점보다도 맛있고, 여타 다른 뷔페들이랑은 비교 자체가 안된다. 먹으면서 계속 감탄하다 나왔다. 퀄리티가 좋아서 어이없을 정도였다. 심지어 마지막에 마신 커피까지 퀄리티가 좋더라.. 여기 뭐냐.. 이제부터 여기 단골이다..\n음식이 맛있어요+2개의 리뷰가 더 있습니다펼쳐보기',
+                author: 'Bony5',
+                eventType: '기업행사',
+                date: '7.1.수'
+              }
+            ].map((rev, idx) => (
               <motion.div 
                 key={rev.id} 
                 initial={{ opacity: 0, y: 25 }}
@@ -1425,25 +1453,22 @@ export default function App() {
                       ))}
                     </div>
                     <span className="text-xs font-bold text-gray-700 font-mono">
-                      {rev.rating ? rev.rating.toFixed(1) : "5.0"}
+                      {rev.rating.toFixed(1)}
                     </span>
                   </div>
 
                   {/* Review Content inside quotes */}
-                  <p className="text-gray-700 text-sm md:text-[15px] leading-relaxed font-sans italic my-4 min-h-[72px]">
+                  <p className="text-gray-700 text-sm md:text-[15px] leading-relaxed font-sans italic my-4 min-h-[72px] whitespace-pre-line">
                     "{rev.content}"
                   </p>
                 </div>
 
-                {/* Customer Info (NO PROFILE PHOTO) */}
+                {/* Customer Info */}
                 <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-4">
                   <div>
                     <h4 className="font-semibold text-gray-900 text-sm md:text-base">
                       {rev.author} 님
                     </h4>
-                    <p className="text-xs text-[#8C745C] font-sans mt-0.5">
-                      {rev.eventType} 연회
-                    </p>
                   </div>
                   <span className="text-[11px] text-gray-400 font-mono">
                     {rev.date}
@@ -1461,16 +1486,15 @@ export default function App() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="mt-12 text-center"
           >
-            <button
-              onClick={() => {
-                setIsReviewPageOpen(true);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
+            <a
+              href="https://pcmap.place.naver.com/restaurant/1979235118/review?bk_query=%EB%B6%80%EC%B2%9C%20%EB%93%9C%EB%A7%88%EB%A6%AC%EC%8A%A4&entry=bmp&fromPanelNum=2&locale=ko&searchText=%EB%B6%80%EC%B2%9C%20%EB%93%9C%EB%A7%88%EB%A6%AC%EC%8A%A4&svcName=map_pcv5&timestamp=202608140040&reviewTheme=total"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-[#8C745C] bg-white border border-[#E2D8C8] hover:bg-[#A68A70] hover:text-white hover:border-[#A68A70] transition-all duration-300 cursor-pointer px-6 py-3 rounded-full shadow-xs hover:shadow"
             >
               <span>전체 고객 후기 및 작성하기</span>
               <ChevronRight size={14} />
-            </button>
+            </a>
           </motion.div>
 
         </div>
