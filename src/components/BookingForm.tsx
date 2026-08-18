@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Reservation } from '../types';
-import { Calendar, Users, Phone, User, Tag, Clock, AlignLeft, CheckCircle, MapPin } from 'lucide-react';
+import { Calendar, Users, Phone, User, Tag, Clock, AlignLeft, CheckCircle, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface BookingFormProps {
@@ -21,7 +21,128 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
   const [contact, setContact] = useState('');
   const [notes, setNotes] = useState('');
   
-  const dateInputRef = useRef<HTMLInputElement>(null);
+  // Custom interactive calendar state
+  const today = new Date();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const calendarContainerRef = useRef<HTMLDivElement>(null);
+
+  // Close when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (calendarContainerRef.current && !calendarContainerRef.current.contains(e.target as Node)) {
+        setIsCalendarOpen(false);
+      }
+    };
+    if (isCalendarOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isCalendarOpen]);
+
+  const toggleCalendar = () => {
+    if (!isCalendarOpen && date) {
+      const parts = date.split('-').map(Number);
+      if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        setViewYear(parts[0]);
+        setViewMonth(parts[1] - 1);
+      }
+    }
+    setIsCalendarOpen(prev => !prev);
+  };
+
+  const handlePrevMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear(prev => prev - 1);
+    } else {
+      setViewMonth(prev => prev - 1);
+    }
+  };
+
+  const handleNextMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear(prev => prev + 1);
+    } else {
+      setViewMonth(prev => prev + 1);
+    }
+  };
+
+  const handleTodayClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const d = now.getDate();
+    setViewYear(y);
+    setViewMonth(m);
+    const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    setDate(dateStr);
+    setIsCalendarOpen(false);
+  };
+
+  const handleSelectDate = (year: number, month: number, day: number) => {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    setDate(dateStr);
+    setIsCalendarOpen(false);
+  };
+
+  const formatDisplayDate = (val: string) => {
+    if (!val) return '';
+    const parts = val.split('-');
+    if (parts.length === 3) {
+      return `${parts[0]}년 ${parts[1]}월 ${parts[2]}일`;
+    }
+    return val;
+  };
+
+  // Generate calendar days
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
+
+  const prevMonthDays = [];
+  for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+    prevMonthDays.push({
+      day: daysInPrevMonth - i,
+      month: viewMonth === 0 ? 11 : viewMonth - 1,
+      year: viewMonth === 0 ? viewYear - 1 : viewYear,
+      isCurrentMonth: false,
+    });
+  }
+
+  const currentMonthDays = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    currentMonthDays.push({
+      day: d,
+      month: viewMonth,
+      year: viewYear,
+      dateStr,
+      isCurrentMonth: true,
+      isSelected: date === dateStr,
+      isToday: todayStr === dateStr,
+    });
+  }
+
+  const totalCells = prevMonthDays.length + currentMonthDays.length;
+  const nextMonthDaysCount = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+  const nextMonthDays = [];
+  for (let d = 1; d <= nextMonthDaysCount; d++) {
+    nextMonthDays.push({
+      day: d,
+      month: viewMonth === 11 ? 0 : viewMonth + 1,
+      year: viewMonth === 11 ? viewYear + 1 : viewYear,
+      isCurrentMonth: false,
+    });
+  }
 
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -219,61 +340,167 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
                 </div>
 
                 {/* Date Picker */}
-                <div className="space-y-2">
+                <div className="space-y-2 relative" ref={calendarContainerRef}>
                   <label className="text-xs text-gray-400 uppercase tracking-wider font-medium flex items-center gap-1.5">
                     <Calendar size={13} className="text-brand-bronze" /> 행사 예정일
                   </label>
-                  <div className="relative">
+                  
+                  {/* Clickable Trigger Input */}
+                  <div 
+                    onClick={toggleCalendar}
+                    className="relative cursor-pointer group"
+                  >
                     <input
-                      ref={dateInputRef}
-                      type="date"
-                      min="1900-01-01"
-                      max="2099-12-31"
-                      value={date}
-                      onClick={(e) => {
-                        try {
-                          (e.currentTarget as HTMLInputElement).showPicker?.();
-                        } catch (err) {
-                          // fallback
-                        }
-                      }}
-                      onFocus={(e) => {
-                        try {
-                          (e.currentTarget as HTMLInputElement).showPicker?.();
-                        } catch (err) {
-                          // fallback
-                        }
-                      }}
-                      onChange={(e) => {
-                        let val = e.target.value;
-                        if (val) {
-                          const parts = val.split('-');
-                          if (parts[0] && parts[0].length > 4) {
-                            parts[0] = parts[0].slice(0, 4);
-                            val = parts.join('-');
-                          }
-                        }
-                        setDate(val);
-                      }}
-                      className="w-full bg-neutral-950/60 border border-neutral-800 rounded-lg py-3 px-4 text-sm text-brand-cream focus:outline-none focus:border-brand-bronze transition cursor-pointer [color-scheme:dark]"
+                      type="text"
+                      readOnly
+                      placeholder="행사 예정일을 선택해 주세요"
+                      value={formatDisplayDate(date)}
+                      className="w-full bg-neutral-950/60 border border-neutral-800 rounded-lg py-3 px-4 pr-10 text-sm text-brand-cream placeholder-gray-500 focus:outline-none focus:border-brand-bronze group-hover:border-neutral-700 transition cursor-pointer select-none"
                     />
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      onClick={() => {
-                        try {
-                          dateInputRef.current?.showPicker?.();
-                          dateInputRef.current?.focus();
-                        } catch (err) {
-                          dateInputRef.current?.focus();
-                        }
-                      }}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-brand-bronze hover:text-amber-400 transition cursor-pointer"
-                      title="달력 열기"
-                    >
-                      <Calendar size={16} />
-                    </button>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-brand-bronze group-hover:text-amber-400 transition pointer-events-none">
+                      <Calendar size={17} />
+                    </div>
                   </div>
+
+                  {/* Custom Calendar Popover */}
+                  <AnimatePresence>
+                    {isCalendarOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className="absolute top-full left-0 mt-2 z-50 w-full sm:w-[320px] bg-neutral-950 border border-neutral-700/80 rounded-2xl p-4 shadow-2xl backdrop-blur-xl"
+                      >
+                        {/* Header: Month / Year / Nav Buttons */}
+                        <div className="flex items-center justify-between mb-3 pb-2 border-b border-neutral-800">
+                          <button
+                            type="button"
+                            onClick={handlePrevMonth}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-neutral-800 transition cursor-pointer"
+                            title="이전 달"
+                          >
+                            <ChevronLeft size={18} />
+                          </button>
+                          
+                          <div className="flex items-center gap-2 font-serif text-sm font-medium text-brand-cream">
+                            <span>{viewYear}년</span>
+                            <span className="text-brand-bronze">{viewMonth + 1}월</span>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={handleTodayClick}
+                              className="text-[11px] px-2 py-0.5 rounded bg-brand-bronze/10 text-brand-bronze hover:bg-brand-bronze/20 border border-brand-bronze/30 transition cursor-pointer"
+                            >
+                              오늘
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleNextMonth}
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-neutral-800 transition cursor-pointer"
+                              title="다음 달"
+                            >
+                              <ChevronRight size={18} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Weekday Labels */}
+                        <div className="grid grid-cols-7 gap-1 text-center mb-1 text-[11px] font-semibold text-gray-400">
+                          <div className="text-red-400/80">일</div>
+                          <div>월</div>
+                          <div>화</div>
+                          <div>수</div>
+                          <div>목</div>
+                          <div>금</div>
+                          <div className="text-sky-400/80">토</div>
+                        </div>
+
+                        {/* Days Grid */}
+                        <div className="grid grid-cols-7 gap-1 text-center">
+                          {/* Previous month days */}
+                          {prevMonthDays.map((item, idx) => (
+                            <button
+                              key={`prev-${idx}`}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectDate(item.year, item.month, item.day);
+                              }}
+                              className="h-8 w-8 mx-auto flex items-center justify-center text-xs text-neutral-600 hover:text-neutral-400 hover:bg-neutral-800/40 rounded-lg transition cursor-pointer"
+                            >
+                              {item.day}
+                            </button>
+                          ))}
+
+                          {/* Current month days */}
+                          {currentMonthDays.map((item) => {
+                            const dayOfWeek = (firstDayOfWeek + item.day - 1) % 7;
+                            const isSunday = dayOfWeek === 0;
+                            const isSaturday = dayOfWeek === 6;
+
+                            return (
+                              <button
+                                key={`curr-${item.day}`}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSelectDate(item.year, item.month, item.day);
+                                }}
+                                className={`h-8 w-8 mx-auto flex items-center justify-center text-xs rounded-lg transition cursor-pointer relative ${
+                                  item.isSelected
+                                    ? 'bg-brand-bronze text-white font-bold shadow-md shadow-brand-bronze/40 ring-2 ring-brand-bronze/50'
+                                    : item.isToday
+                                    ? 'border border-brand-bronze text-brand-bronze font-semibold hover:bg-brand-bronze/20'
+                                    : isSunday
+                                    ? 'text-red-400 hover:bg-neutral-800'
+                                    : isSaturday
+                                    ? 'text-sky-400 hover:bg-neutral-800'
+                                    : 'text-neutral-200 hover:bg-neutral-800 hover:text-white'
+                                }`}
+                              >
+                                {item.day}
+                              </button>
+                            );
+                          })}
+
+                          {/* Next month days */}
+                          {nextMonthDays.map((item, idx) => (
+                            <button
+                              key={`next-${idx}`}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectDate(item.year, item.month, item.day);
+                              }}
+                              className="h-8 w-8 mx-auto flex items-center justify-center text-xs text-neutral-600 hover:text-neutral-400 hover:bg-neutral-800/40 rounded-lg transition cursor-pointer"
+                            >
+                              {item.day}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Selected info footer if date selected */}
+                        {date && (
+                          <div className="mt-3 pt-2 border-t border-neutral-800/80 flex items-center justify-between text-[11px] text-gray-400">
+                            <span>선택된 날짜: <strong className="text-brand-bronze font-medium">{formatDisplayDate(date)}</strong></span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDate('');
+                              }}
+                              className="text-gray-500 hover:text-red-400 transition cursor-pointer"
+                            >
+                              초기화
+                            </button>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Time Picker */}
