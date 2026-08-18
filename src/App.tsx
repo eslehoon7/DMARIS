@@ -597,6 +597,15 @@ export default function App() {
     } catch (error) {
       console.error("Error creating reservation:", error);
     }
+
+    fetch("https://eslehoon.app.n8n.cloud/webhook/dmaris-inquiry", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newRes),
+    }).catch((error) => {
+      console.error("Error sending to n8n:", error);
+    });
+
     setReservations(prev => [newRes, ...prev]);
   };
 
