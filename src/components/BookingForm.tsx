@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Reservation } from '../types';
 import { Calendar, Users, Phone, User, Tag, Clock, AlignLeft, CheckCircle, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -21,6 +21,8 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
   const [contact, setContact] = useState('');
   const [notes, setNotes] = useState('');
   
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -221,24 +223,57 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
                   <label className="text-xs text-gray-400 uppercase tracking-wider font-medium flex items-center gap-1.5">
                     <Calendar size={13} className="text-brand-bronze" /> 행사 예정일
                   </label>
-                  <input
-                    type="date"
-                    min="1900-01-01"
-                    max="2099-12-31"
-                    value={date}
-                    onChange={(e) => {
-                      let val = e.target.value;
-                      if (val) {
-                        const parts = val.split('-');
-                        if (parts[0] && parts[0].length > 4) {
-                          parts[0] = parts[0].slice(0, 4);
-                          val = parts.join('-');
+                  <div className="relative">
+                    <input
+                      ref={dateInputRef}
+                      type="date"
+                      min="1900-01-01"
+                      max="2099-12-31"
+                      value={date}
+                      onClick={(e) => {
+                        try {
+                          (e.currentTarget as HTMLInputElement).showPicker?.();
+                        } catch (err) {
+                          // fallback
                         }
-                      }
-                      setDate(val);
-                    }}
-                    className="w-full bg-neutral-950/60 border border-neutral-800 rounded-lg py-3 px-4 text-sm text-brand-cream focus:outline-none focus:border-brand-bronze transition"
-                  />
+                      }}
+                      onFocus={(e) => {
+                        try {
+                          (e.currentTarget as HTMLInputElement).showPicker?.();
+                        } catch (err) {
+                          // fallback
+                        }
+                      }}
+                      onChange={(e) => {
+                        let val = e.target.value;
+                        if (val) {
+                          const parts = val.split('-');
+                          if (parts[0] && parts[0].length > 4) {
+                            parts[0] = parts[0].slice(0, 4);
+                            val = parts.join('-');
+                          }
+                        }
+                        setDate(val);
+                      }}
+                      className="w-full bg-neutral-950/60 border border-neutral-800 rounded-lg py-3 px-4 text-sm text-brand-cream focus:outline-none focus:border-brand-bronze transition cursor-pointer [color-scheme:dark]"
+                    />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      onClick={() => {
+                        try {
+                          dateInputRef.current?.showPicker?.();
+                          dateInputRef.current?.focus();
+                        } catch (err) {
+                          dateInputRef.current?.focus();
+                        }
+                      }}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-brand-bronze hover:text-amber-400 transition cursor-pointer"
+                      title="달력 열기"
+                    >
+                      <Calendar size={16} />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Time Picker */}
