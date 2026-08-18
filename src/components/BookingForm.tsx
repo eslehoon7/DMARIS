@@ -24,6 +24,20 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const handleContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value;
+    const numbersOnly = rawVal.replace(/[^0-9]/g, '').slice(0, 11);
+    
+    let formatted = numbersOnly;
+    if (numbersOnly.length > 7) {
+      formatted = `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3, 7)}-${numbersOnly.slice(7)}`;
+    } else if (numbersOnly.length > 3) {
+      formatted = `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3)}`;
+    }
+    
+    setContact(formatted);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -291,9 +305,11 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
                   </label>
                   <input
                     type="tel"
+                    inputMode="numeric"
+                    maxLength={13}
                     placeholder="010-0000-0000"
                     value={contact}
-                    onChange={(e) => setContact(e.target.value)}
+                    onChange={handleContactChange}
                     className="w-full bg-neutral-950/60 border border-neutral-800 rounded-lg py-3 px-4 text-sm text-brand-cream focus:outline-none focus:border-brand-bronze transition"
                   />
                 </div>
