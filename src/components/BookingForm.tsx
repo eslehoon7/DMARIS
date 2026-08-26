@@ -15,7 +15,7 @@ interface BookingFormProps {
 export default function BookingForm({ onNewReservation }: BookingFormProps) {
   const [eventType, setEventType] = useState('WEDDING');
   const [date, setDate] = useState('');
-  const [time, setTime] = useState('12:00');
+  const [time, setTime] = useState('1부 (11:30 ~ 14:00)');
   const [guests, setGuests] = useState('');
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
@@ -514,12 +514,9 @@ export default function BookingForm({ onNewReservation }: BookingFormProps) {
                       onChange={(e) => setTime(e.target.value)}
                       className="w-full bg-neutral-950/60 border border-neutral-800 rounded-lg py-3 px-4 text-sm text-brand-cream focus:outline-none focus:border-brand-bronze transition appearance-none cursor-pointer"
                     >
-                      <option value="11:30">점심 1부 (11:30 - 13:30)</option>
-                      <option value="12:00">점심 2부 (12:00 - 14:00)</option>
-                      <option value="13:30">점심 3부 (13:30 - 15:30)</option>
-                      <option value="17:30">저녁 1부 (17:30 - 19:30)</option>
-                      <option value="18:00">저녁 2부 (18:00 - 20:00)</option>
-                      <option value="19:00">저녁 3부 (19:00 - 21:00)</option>
+                      <option value="1부 (11:30 ~ 14:00)">1부 : 11:30 ~ 14:00</option>
+                      <option value="2부 (15:00 ~ 17:30)">2부 : 15:00 ~ 17:30</option>
+                      <option value="3부 (18:30 ~ 21:00)">3부 : 18:30 ~ 21:00</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
                       <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
