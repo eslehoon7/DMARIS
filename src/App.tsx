@@ -993,9 +993,11 @@ export default function App() {
                           <span className="w-8 h-[1px] bg-brand-bronze" />
                         </div>
 
-                        <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-serif font-light text-brand-cream tracking-tight leading-tight md:leading-normal">
+                        <h1 className="text-3xl sm:text-4xl md:text-[4rem] lg:text-[4.8rem] xl:text-[5.5rem] font-serif font-light text-brand-cream tracking-tight leading-tight md:leading-normal">
                           {titleText} <br />
-                          <span className="font-normal italic text-brand-bronze">{subText}</span>
+                          <span className="block text-lg sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-normal italic text-brand-bronze mt-2 sm:mt-4 whitespace-nowrap">
+                            {subText}
+                          </span>
                         </h1>
                       </div>
 
