@@ -1126,45 +1126,39 @@ export default function App() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-xs font-sans">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 text-xs font-sans">
                 <motion.div 
                   whileHover={{ y: -4 }}
                   transition={{ duration: 0.2 }}
-                  className="bg-white/60 p-4 rounded-lg border border-neutral-200 shadow-sm"
+                  className="bg-white/60 p-3.5 rounded-lg border border-neutral-200 shadow-sm"
                 >
-                  <div className="font-serif text-brand-bronze text-base font-medium mb-1">PRIVATE HALL</div>
-                  <p className="text-gray-500 text-[11px] leading-relaxed">
-                    <strong className="font-bold text-gray-700 block">단독 연회장</strong>
-                    <br />
-                    10인 가족모임부터<br />
-                    200인 대규모 행사까지
-                  </p>
+                  <div className="font-serif text-brand-bronze text-sm sm:text-base font-medium mb-1 whitespace-nowrap">PRIVATE HALL</div>
+                  <div className="text-gray-500 text-[11px] leading-relaxed">
+                    <strong className="font-bold text-gray-700 block whitespace-nowrap">단독 연회장</strong>
+                    <span className="text-gray-500 block whitespace-nowrap mt-0.5">10인 ~ 200인 맞춤 연회</span>
+                  </div>
                 </motion.div>
                 <motion.div 
                   whileHover={{ y: -4 }}
                   transition={{ duration: 0.2 }}
-                  className="bg-white/60 p-4 rounded-lg border border-neutral-200 shadow-sm"
+                  className="bg-white/60 p-3.5 rounded-lg border border-neutral-200 shadow-sm"
                 >
-                  <div className="font-serif text-brand-bronze text-base font-medium mb-1">LIVE DINING</div>
-                  <p className="text-gray-500 text-[11px] leading-relaxed">
-                    <strong className="font-bold text-gray-700 block">프리미엄 라이브 키친</strong>
-                    <br />
-                    즉석에서 완성되는<br />
-                    호텔급 라이브 요리
-                  </p>
+                  <div className="font-serif text-brand-bronze text-sm sm:text-base font-medium mb-1 whitespace-nowrap">LIVE DINING</div>
+                  <div className="text-gray-500 text-[11px] leading-relaxed">
+                    <strong className="font-bold text-gray-700 block whitespace-nowrap">프리미엄 라이브 키친</strong>
+                    <span className="text-gray-500 block whitespace-nowrap mt-0.5">호텔급 즉석 라이브 요리</span>
+                  </div>
                 </motion.div>
                 <motion.div 
                   whileHover={{ y: -4 }}
                   transition={{ duration: 0.2 }}
-                  className="bg-white/60 p-4 rounded-lg border border-neutral-200 shadow-sm"
+                  className="bg-white/60 p-3.5 rounded-lg border border-neutral-200 shadow-sm"
                 >
-                  <div className="font-serif text-brand-bronze text-base font-medium mb-1">EVENT SERVICE</div>
-                  <p className="text-gray-500 text-[11px] leading-relaxed">
-                    <strong className="font-bold text-gray-700 block">행사 전문 케어</strong>
-                    <br />
-                    돌잔치·회갑연·웨딩·기업행사<br />
-                    전담 매니저 진행
-                  </p>
+                  <div className="font-serif text-brand-bronze text-sm sm:text-base font-medium mb-1 whitespace-nowrap">EVENT SERVICE</div>
+                  <div className="text-gray-500 text-[11px] leading-relaxed">
+                    <strong className="font-bold text-gray-700 block whitespace-nowrap">행사 전문 케어</strong>
+                    <span className="text-gray-500 block whitespace-nowrap mt-0.5">전담 매니저 맞춤 진행</span>
+                  </div>
                 </motion.div>
               </div>
 
@@ -1177,22 +1171,49 @@ export default function App() {
               </button>
             </motion.div>
 
-            {/* Right Chef Photo Plating */}
+            {/* Right Brand 2x2 Photo Grid */}
             <motion.div 
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-80px" }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="relative"
+              className="grid grid-cols-2 gap-3 sm:gap-4 relative"
             >
-              <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border border-neutral-200/40 group">
-                <img
-                  src="https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80"
-                  alt="Professional fine dining Chef hands plating a premium dish"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
+              {[
+                {
+                  id: 'brand-photo-1',
+                  title: '단독 연회 공간',
+                  image: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2FKakaoTalk_20260831_124625332.png?alt=media&token=1b9f7c90-1c32-497e-889c-f0cd2b601221'
+                },
+                {
+                  id: 'brand-photo-2',
+                  title: '라이브 셰프 키친',
+                  image: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2FKakaoTalk_20260831_124625332_01.jpg?alt=media&token=2b2727e2-1c87-40f9-a304-2ea2e3eeac3a'
+                },
+                {
+                  id: 'brand-photo-3',
+                  title: '프리미엄 뷔페 퀴진',
+                  image: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2FKakaoTalk_20260831_124625332_02.jpg?alt=media&token=5c0a7969-b1ae-4e1d-8724-fbc4fd2e55fd'
+                },
+                {
+                  id: 'brand-photo-4',
+                  title: '특별한 연회 케어',
+                  image: 'https://firebasestorage.googleapis.com/v0/b/dmaris-932df.firebasestorage.app/o/main%20image%2FKakaoTalk_20260831_124625332_03.jpg?alt=media&token=79664f6c-945b-4361-96eb-ddd811bbadd8'
+                }
+              ].map((item) => (
+                <div
+                  key={item.id}
+                  id={item.id}
+                  className="group relative aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden shadow-lg border border-neutral-200/60 bg-neutral-100"
+                >
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              ))}
             </motion.div>
 
           </div>
