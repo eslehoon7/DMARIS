@@ -85,6 +85,7 @@ export default function AdminPanel({
   const [password, setPassword] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginError, setLoginError] = useState('');
+
   const [activeTab, setActiveTab] = useState<'bookings' | 'menu' | 'gallery' | 'reviews' | 'hero'>('bookings');
   const [deleteConfirm, setDeleteConfirm] = useState<{
     id: string;
@@ -93,6 +94,7 @@ export default function AdminPanel({
   } | null>(null);
 
   // Hero Image Form State
+  const [isAddHeroModalOpen, setIsAddHeroModalOpen] = useState(false);
   const [heroTitle, setHeroTitle] = useState('');
   const [heroSubtitle, setHeroSubtitle] = useState('');
   const [heroImageUrl, setHeroImageUrl] = useState('');
@@ -176,9 +178,9 @@ export default function AdminPanel({
       return;
     }
     
-    // Accept standard ID 'admin' or 'dmaris', and passwords '1234', 'admin', 'dmaris'
-    const isValidId = adminId.toLowerCase() === 'admin' || adminId.toLowerCase() === 'dmaris';
-    const isValidPw = password === '1234' || password === 'admin' || password === 'dmaris';
+    // Admin authentication: ID: dmaris_manager, PW: dmaris@bucheon
+    const isValidId = adminId.trim() === 'dmaris_manager';
+    const isValidPw = password === 'dmaris@bucheon';
     
     if (isValidId && isValidPw) {
       setIsLoggedIn(true);
@@ -347,9 +349,28 @@ export default function AdminPanel({
     }
   };
 
-  // Add Hero Image Handler
+  // Open Add Hero Modal with Max 8 Check
+  const handleOpenAddHeroModal = () => {
+    if (heroImages.length >= 8) {
+      alert('메인사진은 최대 8장까지만 등록 가능합니다.\n새로운 사진을 추가하시려면 기존 등록된 사진을 삭제한 후 다시 시도해 주세요.');
+      return;
+    }
+    setHeroTitle('');
+    setHeroSubtitle('');
+    setHeroImageUrl('');
+    setHeroImageFile(null);
+    setIsAddHeroModalOpen(true);
+  };
+
+  // Add Hero Image Handler (Max 8 limit)
   const handleAddHeroImage = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (heroImages.length >= 8) {
+      alert('메인사진은 최대 8장까지만 등록할 수 있습니다. 추가를 위해 기존 사진을 먼저 삭제해 주세요.');
+      return;
+    }
+
     if (!heroImageUrl && !heroImageFile) {
       alert('메인사진 이미지 파일 또는 URL을 입력해 주세요.');
       return;
@@ -384,7 +405,8 @@ export default function AdminPanel({
       setHeroSubtitle('');
       setHeroImageUrl('');
       setHeroImageFile(null);
-      alert('새로운 메인사진이 등록되었습니다! 홈페이지 메인화면 슬라이드에 즉시 반영됩니다.');
+      setIsAddHeroModalOpen(false);
+      alert('새로운 메인사진이 성공적으로 추가되었습니다! (현재 ' + (heroImages.length + 1) + '/8장)');
     } catch (error) {
       console.error("Hero upload error:", error);
       alert('메인사진 등록 중 업로드 오류: ' + (error instanceof Error ? error.message : String(error)));
@@ -1688,30 +1710,53 @@ export default function AdminPanel({
           {activeTab === 'hero' && (
             <div className="space-y-8">
               
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-900 pb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-900 pb-6">
                 <div>
-                  <h3 className="text-lg font-serif font-light text-brand-cream">
-                    메인 화면 대문 사진 관리
+                  <h3 className="text-lg font-serif font-light text-brand-cream flex items-center gap-2.5">
+                    <span>메인 화면 대문 사진 관리</span>
+                    <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-brand-bronze/15 text-brand-bronze font-mono font-medium border border-brand-bronze/30">
+                      최대 8장
+                    </span>
                   </h3>
                   <p className="text-xs text-neutral-400 mt-1 font-sans">
-                    홈페이지 메인화면(Hero Section)에 로테이션되는 대문 배경사진을 직접 등록/삭제하실 수 있습니다.
+                    홈페이지 메인화면(Hero Section)에 순차적으로 로테이션되는 대문 배경사진을 직접 등록/수정/삭제하실 수 있습니다. (최대 8장까지 추가 가능)
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs">
-                  <div className="bg-neutral-900 border border-neutral-800 px-4 py-2 rounded-lg text-gray-300">
-                    등록된 메인사진: <strong className="text-brand-bronze font-mono text-sm ml-1">{heroImages.length}장</strong>
+                <div className="flex items-center gap-3">
+                  <div className="bg-neutral-900 border border-neutral-800 px-3.5 py-2 rounded-lg text-xs text-gray-300 flex items-center gap-1.5 shadow-sm">
+                    <span className="text-gray-400">등록 현황:</span>
+                    <span className="font-mono text-sm font-bold text-brand-bronze">
+                      {heroImages.length}
+                    </span>
+                    <span className="text-gray-500 font-mono text-xs">/ 8장</span>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={handleOpenAddHeroModal}
+                    disabled={heroImages.length >= 8}
+                    className={`px-4 py-2 rounded-lg text-xs font-semibold tracking-wide flex items-center gap-1.5 transition cursor-pointer shadow-sm ${
+                      heroImages.length >= 8
+                        ? 'bg-neutral-800 text-gray-500 border border-neutral-700/60 cursor-not-allowed opacity-60'
+                        : 'bg-brand-bronze hover:bg-brand-bronze-dark text-white active:scale-95'
+                    }`}
+                    title={heroImages.length >= 8 ? '최대 8장까지 모두 등록되었습니다' : '새로운 메인사진 추가 (최대 8장)'}
+                  >
+                    <Plus size={15} />
+                    <span>추가</span>
+                  </button>
                 </div>
               </div>
-
-
 
               {/* Existing Hero Images List */}
               <div className="bg-neutral-950 rounded-xl border border-neutral-900 overflow-hidden">
                 <div className="p-4 bg-neutral-900/60 border-b border-neutral-800 flex items-center justify-between">
-                  <h4 className="text-xs font-semibold text-gray-300">현재 등록된 메인사진 목록</h4>
-                  <span className="text-[11px] text-gray-500 font-mono">등록된 사진들이 메인 화면에서 순서대로 넘어가며 표시됩니다</span>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-xs font-semibold text-gray-300">현재 등록된 메인사진 목록</h4>
+                    <span className="text-[11px] font-mono text-brand-bronze font-bold">({heroImages.length} / 8)</span>
+                  </div>
+                  <span className="text-[11px] text-gray-500 font-mono hidden sm:inline">등록된 사진들이 메인 화면에서 순서대로 넘어가며 표시됩니다</span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
@@ -1777,9 +1822,30 @@ export default function AdminPanel({
                   ))}
                 </AnimatePresence>
 
+                  {/* Add New Hero Shortcut Card if under 8 */}
+                  {heroImages.length < 8 && (
+                    <button
+                      type="button"
+                      onClick={handleOpenAddHeroModal}
+                      className="border-2 border-dashed border-neutral-800 hover:border-brand-bronze/60 hover:bg-brand-bronze/5 rounded-xl p-6 flex flex-col items-center justify-center gap-3 text-center transition cursor-pointer group min-h-[220px]"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-neutral-900 group-hover:bg-brand-bronze/20 border border-neutral-800 group-hover:border-brand-bronze/40 flex items-center justify-center text-gray-400 group-hover:text-brand-bronze transition">
+                        <Plus size={22} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-300 group-hover:text-brand-cream">
+                          새로운 메인사진 추가
+                        </p>
+                        <p className="text-[11px] text-gray-500 mt-1">
+                          현재 {heroImages.length}장 / 최대 8장까지 추가 가능
+                        </p>
+                      </div>
+                    </button>
+                  )}
+
                   {heroImages.length === 0 && (
                     <div className="col-span-full py-12 text-center text-gray-500 text-xs">
-                      등록된 메인사진이 없습니다. 상단 폼에서 사진을 올려주세요.
+                      등록된 메인사진이 없습니다. 우측 상단의 [+ 추가] 버튼을 눌러 사진을 올려주세요.
                     </div>
                   )}
                 </div>
@@ -1947,6 +2013,147 @@ export default function AdminPanel({
           </motion.div>
         </motion.div>
       )}
+      </AnimatePresence>
+
+      {/* Add New Hero Image Modal */}
+      <AnimatePresence>
+        {isAddHeroModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-lg bg-neutral-950 border border-neutral-800 rounded-xl p-6 shadow-2xl space-y-5"
+            >
+              <div className="flex items-center justify-between border-b border-neutral-900 pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-brand-bronze/20 border border-brand-bronze/30 flex items-center justify-center text-brand-bronze">
+                    <Plus size={18} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-gray-200">새로운 메인 대문 사진 추가</h3>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-800 text-brand-bronze border border-neutral-700">
+                        {heroImages.length}/8장
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-400 font-sans mt-0.5">
+                      홈페이지 메인 슬라이드에 노출될 사진을 추가합니다 (최대 8장).
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAddHeroModalOpen(false)}
+                  className="text-gray-400 hover:text-white p-1 rounded-lg cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddHeroImage} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-medium text-gray-400">
+                    메인 타이틀 <span className="text-gray-500 font-normal">(선택 - 미입력 시 기본 문구 적용)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={heroTitle}
+                    onChange={(e) => setHeroTitle(e.target.value)}
+                    placeholder="예: 품격 있는 순간,"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-bronze"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-medium text-gray-400">
+                    서브 타이틀 <span className="text-gray-500 font-normal">(선택 - 미입력 시 기본 문구 적용)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={heroSubtitle}
+                    onChange={(e) => setHeroSubtitle(e.target.value)}
+                    placeholder="예: 드마리스에서 완성됩니다"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-bronze"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[11px] font-medium text-gray-400">
+                    대문 사진 파일 선택 또는 이미지 URL <span className="text-red-400">*</span>
+                  </label>
+                  
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleHeroFileChange}
+                    className="w-full text-xs text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-bronze/20 file:text-brand-bronze hover:file:bg-brand-bronze/30 cursor-pointer bg-neutral-900 border border-neutral-800 rounded-lg p-2"
+                  />
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-500 font-mono">또는 URL 직접 입력:</span>
+                    <input
+                      type="text"
+                      value={heroImageUrl}
+                      onChange={(e) => setHeroImageUrl(e.target.value)}
+                      placeholder="https://..."
+                      className="flex-1 bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-bronze"
+                    />
+                  </div>
+
+                  {heroImageUrl && (
+                    <div className="relative h-40 rounded-lg overflow-hidden border border-neutral-800 bg-black mt-2">
+                      <img
+                        src={heroImageUrl}
+                        alt="새 사진 미리보기"
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm border border-brand-bronze/40 text-brand-bronze text-[10px] font-mono px-2.5 py-1 rounded-full font-bold">
+                        새 슬라이드 미리보기
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-neutral-900/70 border border-neutral-800/80 rounded-lg p-3 text-[11px] text-gray-400 leading-relaxed">
+                  💡 <span className="text-gray-300 font-medium">안내:</span> 대문 사진은 최대 8장까지 등록할 수 있습니다. 등록 즉시 메인화면 슬라이드에 순서대로 적용됩니다.
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-neutral-900">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddHeroModalOpen(false)}
+                    className="py-2.5 px-4 bg-neutral-900 hover:bg-neutral-850 text-gray-400 hover:text-white rounded-lg text-xs font-medium border border-neutral-800 transition cursor-pointer"
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUploading || (!heroImageUrl && !heroImageFile)}
+                    className="py-2.5 px-5 bg-brand-bronze hover:bg-brand-bronze-dark text-white rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                  >
+                    {isUploading ? (
+                      <span>{uploadStatus || '업로드 중...'}</span>
+                    ) : (
+                      <>
+                        <Plus size={14} />
+                        <span>사진 등록하기</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

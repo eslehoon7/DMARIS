@@ -102,5 +102,9 @@ service cloud.firestore {
       allow update: if isValidId(heroImageId) && isValidHeroImage(request.resource.data);
       allow delete: if true;
     }
+
+    match /admin_auth/{authId} {
+      allow read, write: if true;
+    }
   }
 }
