@@ -1695,7 +1695,7 @@ export default function App() {
                 </a>
               </p>
               <p>Tel : 032-323-3888 | Fax : 032-323-3888</p>
-              <p>사업자등록번호 : 793-81-03151 | 이메일 : ross604@naver.com</p>
+              <p>사업자등록번호 : 890-86-04607 | 이메일 : ross604@naver.com</p>
             </div>
             
             <div className="text-left md:text-right space-y-1">
