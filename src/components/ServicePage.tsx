@@ -760,7 +760,7 @@ export default function ServicePage({
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 text-[11px] text-gray-600">
             <div className="space-y-1">
               <p>주소: 경기도 부천시 원미구 길주로 71 리파인빌 B/D 3층 드마리스 부천점</p>
-              <p>Tel : 032-323-3888 | Fax : 032-323-3888</p>
+              <p>Tel : 0507-1391-0089 | Fax : 032-323-3888</p>
               <p>사업자등록번호 : 890-86-04607 | 이메일 : ross604@naver.com</p>
             </div>
             
