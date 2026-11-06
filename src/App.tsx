@@ -447,14 +447,25 @@ export default function App() {
         return JSON.stringify(item) !== JSON.stringify(oldItem);
       });
 
-      const promises: Promise<void>[] = [];
-      for (const item of toDelete) {
-        promises.push(deleteDoc(doc(db, "gallery_items", item.id)));
+      if (toDelete.length > 0 || toWrite.length > 0) {
+        const allOps = [
+          ...toDelete.map(item => ({ type: 'delete' as const, ref: doc(db, "gallery_items", item.id), data: null })),
+          ...toWrite.map(item => ({ type: 'set' as const, ref: doc(db, "gallery_items", item.id), data: item }))
+        ];
+        
+        for (let i = 0; i < allOps.length; i += 400) {
+          const chunk = allOps.slice(i, i + 400);
+          const batch = writeBatch(db);
+          for (const op of chunk) {
+            if (op.type === 'delete') {
+              batch.delete(op.ref);
+            } else if (op.data) {
+              batch.set(op.ref, op.data);
+            }
+          }
+          await batch.commit();
+        }
       }
-      for (const item of toWrite) {
-        promises.push(setDoc(doc(db, "gallery_items", item.id), item));
-      }
-      await Promise.all(promises);
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, "gallery_items");
     }

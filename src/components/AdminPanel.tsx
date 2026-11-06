@@ -122,6 +122,53 @@ export default function AdminPanel({
   const [galleryDate, setGalleryDate] = useState('2026.07');
   const [galleryImage, setGalleryImage] = useState('');
   const [galleryFile, setGalleryFile] = useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+
+  const handleGalleryFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawFiles: File[] = e.target.files ? Array.from(e.target.files) : [];
+    if (rawFiles.length === 0) return;
+
+    let filesToAdd: File[] = rawFiles;
+    if (filesToAdd.length > 50) {
+      alert('한 번에 최대 50장까지 선택할 수 있습니다. (첫 50장만 선택되었습니다.)');
+      filesToAdd = filesToAdd.slice(0, 50);
+    }
+
+    // Revoke old blob preview URLs to release memory
+    galleryPreviews.forEach(url => {
+      if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+    });
+
+    const newPreviews = filesToAdd.map((f: File) => URL.createObjectURL(f));
+    setGalleryFiles(filesToAdd);
+    setGalleryPreviews(newPreviews);
+    setGalleryFile(filesToAdd[0] || null);
+    setGalleryImage('');
+  };
+
+  const handleRemoveGalleryFile = (index: number) => {
+    const newFiles = [...galleryFiles];
+    const newPreviews = [...galleryPreviews];
+    if (newPreviews[index]?.startsWith('blob:')) {
+      URL.revokeObjectURL(newPreviews[index]);
+    }
+    newFiles.splice(index, 1);
+    newPreviews.splice(index, 1);
+    setGalleryFiles(newFiles);
+    setGalleryPreviews(newPreviews);
+    setGalleryFile(newFiles[0] || null);
+  };
+
+  const handleClearGalleryFiles = () => {
+    galleryPreviews.forEach(url => {
+      if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+    });
+    setGalleryFiles([]);
+    setGalleryPreviews([]);
+    setGalleryFile(null);
+    setGalleryImage('');
+  };
 
   const handleGalleryCatChange = (newCat: 'WEDDING' | 'BIRTHDAY' | 'LONGEVITY' | 'CORPORATE' | 'CATERING' | 'BUFFET') => {
     setGalleryCat(newCat);
@@ -555,50 +602,103 @@ export default function AdminPanel({
     });
   };
 
-  // Add Gallery Item
+  // Add Gallery Item (Supports batch uploading up to 50 photos at once with identical metadata)
   const handleAddGalleryItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!galleryTitle) {
+    if (!galleryTitle.trim()) {
       alert('갤러리 제목을 기록해 주세요.');
       return;
     }
 
-    setIsUploading(true);
-    setUploadStatus('이미지를 Firebase Storage에 업로드 중...');
+    if (galleryFiles.length === 0 && !galleryImage.trim()) {
+      alert('등록할 사진을 선택하거나 이미지 URL을 입력해 주세요.');
+      return;
+    }
 
-    let finalImage = galleryImage;
+    setIsUploading(true);
+    setUploadStatus('사진 업로드를 준비하는 중...');
+
     try {
-      if (galleryFile) {
-        const fileExt = galleryFile.name.split('.').pop() || 'png';
-        const storageRef = ref(storage, `gallery/${Date.now()}.${fileExt}`);
-        const snapshot = await uploadBytes(storageRef, galleryFile);
-        const downloadUrl = await getDownloadURL(snapshot.ref);
-        finalImage = downloadUrl;
+      const uploadedUrls: string[] = [];
+
+      if (galleryFiles.length > 0) {
+        const total = galleryFiles.length;
+        // Upload in concurrent batches of 3 for speed and network reliability
+        const chunkSize = 3;
+        for (let i = 0; i < total; i += chunkSize) {
+          const chunk = galleryFiles.slice(i, i + chunkSize);
+          const chunkPromises = chunk.map(async (file, chunkIndex) => {
+            const currentIndex = i + chunkIndex;
+            setUploadStatus(`사진 압축 및 Firebase Storage 업로드 중... (${currentIndex + 1}/${total}장)`);
+            
+            const compressed = await compressImageFile(file);
+            const fileExt = compressed.name.split('.').pop() || 'jpg';
+            const cleanName = compressed.name.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 15);
+            const storagePath = `gallery/${Date.now()}_${currentIndex}_${cleanName}.${fileExt}`;
+            const storageRef = ref(storage, storagePath);
+            
+            try {
+              const snapshot = await uploadBytes(storageRef, compressed);
+              return await getDownloadURL(snapshot.ref);
+            } catch (storageErr) {
+              console.warn("Storage upload fallback to dataURL:", storageErr);
+              return new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(compressed);
+              });
+            }
+          });
+
+          const chunkResults = await Promise.all(chunkPromises);
+          uploadedUrls.push(...chunkResults);
+        }
       } else if (galleryImage.startsWith('data:')) {
+        setUploadStatus('이미지를 Firebase Storage에 업로드 중...');
         const fileExt = galleryImage.split(';')[0].split('/')[1]?.split('+')[0] || 'png';
         const storageRef = ref(storage, `gallery/${Date.now()}.${fileExt}`);
         const snapshot = await uploadString(storageRef, galleryImage, 'data_url');
         const downloadUrl = await getDownloadURL(snapshot.ref);
-        finalImage = downloadUrl;
-      } else if (!galleryImage) {
-        finalImage = 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80';
+        uploadedUrls.push(downloadUrl);
+      } else if (galleryImage.trim()) {
+        uploadedUrls.push(galleryImage.trim());
+      } else {
+        uploadedUrls.push('https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80');
       }
 
-      const newItem: GalleryItem = {
-        id: 'g-' + Date.now(),
-        title: galleryTitle,
+      if (uploadedUrls.length === 0) {
+        throw new Error('업로드된 사진이 없습니다.');
+      }
+
+      // Batch-create items where title, category, subCategory, and date are identical for all photos in this batch
+      // "내용은 뒤에 내용과 동일하게 적용될수 있도록 해줘"
+      const now = Date.now();
+      const newItems: GalleryItem[] = uploadedUrls.map((url, idx) => ({
+        id: `g-${now}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+        title: galleryTitle.trim(),
         category: galleryCat,
         subCategory: gallerySubCat,
-        date: galleryDate || '2026.07',
-        imageUrl: finalImage
-      };
+        date: galleryDate.trim() || '2026.07',
+        imageUrl: url
+      }));
 
-      onUpdateGalleryItems([newItem, ...galleryItems]);
+      onUpdateGalleryItems([...newItems, ...galleryItems]);
 
-      setGalleryTitle('');
-      setGalleryImage('');
+      // Cleanup preview URLs and reset form states
+      galleryPreviews.forEach(url => {
+        if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+      });
+      setGalleryFiles([]);
+      setGalleryPreviews([]);
       setGalleryFile(null);
-      alert('새로운 행사 전경 사진이 성공적으로 업로드되었습니다!');
+      setGalleryImage('');
+      setGalleryTitle('');
+
+      alert(
+        newItems.length > 1
+          ? `총 ${newItems.length}장의 사진이 동일한 내용("${galleryTitle}")으로 갤러리에 성공적으로 일괄 등록되었습니다!`
+          : '새로운 행사 전경 사진이 성공적으로 업로드되었습니다!'
+      );
     } catch (error) {
       console.error("Upload error:", error);
       alert('이미지 업로드에 실패했습니다: ' + (error instanceof Error ? error.message : String(error)));
@@ -1284,21 +1384,66 @@ export default function AdminPanel({
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => handleImageFileChange(e, 'gallery')}
+                        multiple
+                        onChange={handleGalleryFilesChange}
                         className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                       />
                       <div className="text-center space-y-1">
                         <ImageIcon size={18} className="mx-auto text-brand-bronze mb-1" />
                         <span className="text-[11px] text-neutral-300 font-medium block">
-                          {galleryImage.startsWith('data:') ? '✅ 로컬 이미지 장착 완료' : '컴퓨터 파일 탐색기에서 이미지 선택하기'}
+                          {galleryFiles.length > 0 
+                            ? `✅ 사진 ${galleryFiles.length}장 선택 완료 (최대 50장)` 
+                            : '컴퓨터 파일 탐색기에서 사진 선택 (최대 50장 다중 선택 가능)'}
                         </span>
-                        <p className="text-[11px] text-amber-400/90 font-medium leading-snug">
-                          ※ 500KB 이내의 사진을 업로드해야 합니다. (로딩 속도 최적화)
+                        <p className="text-[10px] text-neutral-500 leading-snug">
+                          ※ Ctrl 또는 Shift 키를 누르고 사진을 선택하여 최대 50장까지 한 번에 올릴 수 있습니다.
                         </p>
                       </div>
                     </div>
 
-                    {galleryImage && (
+                    {/* Previews of selected files */}
+                    {galleryPreviews.length > 0 && (
+                      <div className="mt-2 space-y-2 p-2.5 rounded-lg border border-neutral-800 bg-neutral-950/70">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-brand-bronze font-medium">
+                            선택된 사진 목록 ({galleryPreviews.length} / 최대 50장)
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleClearGalleryFiles}
+                            className="text-gray-400 hover:text-red-400 text-[10px] underline cursor-pointer"
+                          >
+                            선택 전체 취소
+                          </button>
+                        </div>
+
+                        <div className="p-2 rounded bg-brand-bronze/10 border border-brand-bronze/20 text-[10px] text-brand-cream/90 leading-relaxed">
+                          💡 <strong>내용 일괄 적용 안내:</strong> 등록 시 선택한 모든 사진({galleryPreviews.length}장)에 위에서 작성하신 제목, 카테고리, 촬영일자가 동일하게 자동 적용됩니다.
+                        </div>
+
+                        <div className="grid grid-cols-5 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                          {galleryPreviews.map((url, idx) => (
+                            <div key={idx} className="relative aspect-square rounded overflow-hidden border border-neutral-800 group bg-neutral-900">
+                              <img src={url} alt={`선택사진 ${idx + 1}`} className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveGalleryFile(idx)}
+                                className="absolute top-0.5 right-0.5 bg-black/80 hover:bg-red-600 text-white w-4 h-4 rounded-full flex items-center justify-center text-[9px] transition cursor-pointer"
+                                title="이 사진 제외"
+                              >
+                                ✕
+                              </button>
+                              <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-gray-300 text-center py-0.5 font-mono">
+                                #{idx + 1}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Fallback Single Image URL preview if no files */}
+                    {galleryPreviews.length === 0 && galleryImage && (
                       <div className="mt-2 relative aspect-[16/9] rounded-lg overflow-hidden border border-neutral-800 bg-black">
                         <img src={galleryImage} alt="미리보기" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         <button
@@ -1328,7 +1473,11 @@ export default function AdminPanel({
                         <span>{uploadStatus || '업로드 중...'}</span>
                       </>
                     ) : (
-                      <span>갤러리 신규 스냅 이미지 등록하기</span>
+                      <span>
+                        {galleryFiles.length > 1
+                          ? `갤러리 사진 ${galleryFiles.length}장 일괄 등록하기`
+                          : '갤러리 신규 스냅 이미지 등록하기'}
+                      </span>
                     )}
                   </button>
 
